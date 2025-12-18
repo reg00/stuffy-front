@@ -2,8 +2,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Login } from './components/Auth/Login';
 import { Register } from './components/Auth/Register';
 import { ProtectedRoute } from './components/Auth/ProtectedRoute';
-import { Dashboard } from './components/Dashboard/Dashboard';
 import { EventsPage } from './components/Events/EventsPage';
+import { EventDetailsPage } from './components/Events/EventDetailsPage';
+import { EventParticipantsPage } from './components/Events/EventParticipantsPage';
+import { EventPurchasesPage } from './components/Events/EventPurchasesPage';
+import { NotFoundPage } from './components/Errors/NotFoundPage';
 import { useAuthStore } from './store/auth-store';
 
 function App() {
@@ -15,25 +18,13 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        <Route
-          path="/events"
-          element={
-            <ProtectedRoute>
-              <EventsPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/events" element={<ProtectedRoute> <EventsPage /> </ProtectedRoute>}/>
 
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/events/:id" element={<ProtectedRoute> <EventDetailsPage /> </ProtectedRoute> }/>
 
-        {/* корень → на /events, если залогинен, иначе на /login */}
+        <Route path="/events/:id/participants" element={<ProtectedRoute> <EventParticipantsPage /> </ProtectedRoute> } />
+        <Route path="/events/:id/purchases" element={<ProtectedRoute> <EventPurchasesPage /></ProtectedRoute>} />
+
         <Route
           path="/"
           element={
@@ -44,6 +35,9 @@ function App() {
             )
           }
         />
+
+      <Route path="*" element={<NotFoundPage />} />
+
       </Routes>
     </Router>
   );

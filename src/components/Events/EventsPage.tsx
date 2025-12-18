@@ -4,8 +4,10 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { Link } from 'react-router-dom';
 import { eventsService } from '../../services/event-service';
 import type { EventShortEntry } from '@/api';
+import styles from './Event.module.css';
 
 const LIMIT = 10;
 
@@ -36,19 +38,14 @@ export const EventsPage: React.FC = () => {
       if (!data.length) {
         hasMoreRef.current = false;
         setHasMore(false);
-        // как только понимаем, что данных нет — отключаем observer
-        if (observerRef.current) {
-          observerRef.current.disconnect();
-        }
+        if (observerRef.current) observerRef.current.disconnect();
         return;
       }
 
       if (data.length < LIMIT) {
         hasMoreRef.current = false;
         setHasMore(false);
-        if (observerRef.current) {
-          observerRef.current.disconnect();
-        }
+        if (observerRef.current) observerRef.current.disconnect();
       }
 
       setEvents(prev => [...prev, ...data]);
@@ -95,18 +92,12 @@ export const EventsPage: React.FC = () => {
   }, [loadEvents]);
 
   return (
-    <div
-      style={{
-        padding: '16px',
-        display: 'flex',
-        justifyContent: 'center',
-      }}
-    >
-      <div style={{ width: '100%', maxWidth: 1080 }}>
-        <h1 style={{ margin: '0 0 16px' }}>События</h1>
+    <div className={styles.page}>
+      <div className={styles.container}>
+        <h1 className={styles.eventsTitle}>События</h1>
 
         {error && (
-          <div style={{ marginBottom: 12, color: 'var(--color-danger)' }}>
+          <div className={styles.error}>
             {error}
             <button
               className="secondary"
@@ -119,108 +110,52 @@ export const EventsPage: React.FC = () => {
         )}
 
         {!events.length && !isLoading && !error && (
-          <p style={{ color: 'var(--color-muted)' }}>Событий пока нет.</p>
+          <p className={styles.emptyText}>Событий пока нет.</p>
         )}
 
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 12,
-          }}
-        >
+        <div className={styles.eventsList}>
           {events.map(event => (
-            <div
+            <Link
               key={event.id}
-              style={{
-                borderRadius: 18,
-                border: '1px solid var(--color-border)',
-                background: 'var(--color-bg-elevated)',
-                padding: '10px 14px',
-                boxShadow: '0 2px 8px rgba(15, 23, 42, 0.10)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 4,
-              }}
+              to={`/events/${event.id}`}
+              className={styles.eventCardLink}
             >
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  gap: 8,
-                }}
-              >
-                <h2
-                  style={{
-                    margin: 0,
-                    fontSize: 15,
-                    fontWeight: 600,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {event.name}
-                </h2>
+              <div className={styles.eventCard}>
+                <div className={styles.eventCardHeader}>
+                  <h2 className={styles.eventCardTitle}>{event.name}</h2>
 
-                <span
-                  style={{
-                    padding: '2px 8px',
-                    borderRadius: 999,
-                    fontSize: 11,
-                    background: event.isCompleted
-                      ? 'rgba(34, 197, 94, 0.12)'
-                      : 'rgba(59, 130, 246, 0.12)',
-                    color: event.isCompleted ? '#16a34a' : '#2563eb',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {event.isCompleted ? 'Завершено' : 'Активно'}
-                </span>
-              </div>
+                  <span
+                    className={
+                      event.isCompleted
+                        ? styles.eventStatusDone
+                        : styles.eventStatusActive
+                    }
+                  >
+                    {event.isCompleted ? 'Завершено' : 'Активно'}
+                  </span>
+                </div>
 
-              {event.description && (
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 13,
-                    color: 'var(--color-muted)',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                  }}
-                >
-                  {event.description}
+                {event.description && (
+                  <p className={styles.eventCardDescription}>
+                    {event.description}
+                  </p>
+                )}
+
+                <p className={styles.eventCardDate}>
+                  Начало: {new Date(event.eventDateStart).toLocaleString()}
                 </p>
-              )}
-
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 12,
-                  color: 'var(--color-muted)',
-                }}
-              >
-                Начало: {new Date(event.eventDateStart).toLocaleString()}
-              </p>
-            </div>
+              </div>
+            </Link>
           ))}
         </div>
 
-        <div ref={sentinelRef} style={{ height: 1 }} />
+        <div ref={sentinelRef} className={styles.eventsSentinel} />
 
         {isLoading && (
-          <p style={{ marginTop: 12, fontSize: 13, color: 'var(--color-muted)' }}>
-            Загружаем ещё...
-          </p>
+          <p className={styles.eventsLoadingText}>Загружаем ещё...</p>
         )}
         {!hasMore && events.length > 0 && (
-          <p style={{ marginTop: 12, fontSize: 12, color: 'var(--color-muted)' }}>
-            Больше событий нет.
-          </p>
+          <p className={styles.eventsEndText}>Больше событий нет.</p>
         )}
       </div>
     </div>
