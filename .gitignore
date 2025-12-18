@@ -1,0 +1,37 @@
+# зависимости
+node_modules/
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# сборка / бандлы
+dist/
+build/
+coverage/
+*.log
+
+# env-файлы
+.env
+.env.*
+!.env.example
+
+# Vite / CRA / прочее
+.vite/
+*.tsbuildinfo
+
+# IDE и ОС
+.vscode/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# тесты
+jest-html-reporters-*
+.junit.xml
+
+# кэш инструментов
+.cache/
+.npm/
+.yarn/
+turbo/
