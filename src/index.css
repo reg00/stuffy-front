@@ -1,0 +1,119 @@
+/* Базовые настройки шрифта и сглаживания */
+:root {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Светлая тема по умолчанию */
+:root[data-theme="light"],
+:root:not([data-theme]) {
+  color: #0f172a;
+  background-color: #f9fafb;
+
+  --color-bg: #f9fafb;
+  --color-bg-elevated: #ffffff;
+  --color-border: #e5e7eb;
+  --color-text: #0f172a;
+  --color-muted: #6b7280;
+
+  --color-primary: #4f46e5;
+  --color-primary-hover: #4338ca;
+  --color-primary-soft: #eef2ff;
+
+  --color-accent: #22c55e;
+  --color-danger: #ef4444;
+
+  --radius-md: 0.5rem;
+  --shadow-soft: 0 10px 25px rgba(15, 23, 42, 0.08);
+}
+
+/* Тёмная тема */
+:root[data-theme="dark"] {
+  color: #e5e7eb;
+  background-color: #191a1a;
+
+  --color-bg: #191a1a;
+  --color-bg-elevated: #191a1a;
+  --color-border: #1f2937;
+  --color-text: #e5e7eb;
+  --color-muted: #9ca3af;
+
+  --color-primary: #6366f1;
+  --color-primary-hover: #4f46e5;
+  --color-primary-soft: rgba(99, 102, 241, 0.1);
+
+  --color-accent: #22c55e;
+  --color-danger: #ef4444;
+
+  --radius-md: 0.5rem;
+  --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.75);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+}
+
+/* Ссылки */
+a {
+  font-weight: 500;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--color-primary-hover);
+}
+
+/* Кнопки */
+button {
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 0.95rem;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: var(--color-primary);
+  color: #ffffff;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.08s ease;
+  box-shadow: var(--shadow-soft);
+}
+
+button:hover {
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-soft);
+  transform: translateY(-1px);
+}
+
+button:focus,
+button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Вторичная кнопка */
+button.secondary {
+  background-color: var(--color-bg-elevated);
+  color: var(--color-text);
+  border-color: var(--color-border);
+  box-shadow: none;
+}
+
+button.secondary:hover {
+  background-color: var(--color-primary-soft);
+  border-color: var(--color-primary);
+}
