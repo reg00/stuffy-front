@@ -5,7 +5,7 @@ import {
   postApiV1Events,
 } from '../api/sdk.gen';
 import { apiClient } from './api-client';
-import type { EventShortEntryResponse, EventShortEntry, GetEventEntry, AddEventEntry } from '@/api';
+import type { EventShortEntryResponse, EventShortEntry, GetEventEntry, AddEventEntry } from '../api';
 
 class EventsService {
   async getEvents(offset: number = 0, limit: number = 20): Promise<EventShortEntry[]> {
@@ -14,8 +14,10 @@ class EventsService {
       client: apiClient.getClient(),
     });
 
-    const data = (response.data as EventShortEntryResponse).data ?? [];
-    return data;
+    if(response.data)
+      return (response.data as EventShortEntryResponse).data ?? [];
+        
+    throw response.error
   }
 
   async getEventById(eventId: string): Promise<GetEventEntry> {
@@ -24,7 +26,10 @@ class EventsService {
       client: apiClient.getClient(),
     });
 
-    return response.data as GetEventEntry;
+    if(response.data)
+      return response.data as GetEventEntry;
+        
+    throw response.error
   }
 
   async createEvent(payload: AddEventEntry): Promise<EventShortEntry> {
@@ -33,7 +38,10 @@ class EventsService {
       client: apiClient.getClient(),
     });
 
-    return response.data as EventShortEntry;
+    if(response.data)
+      return response.data as EventShortEntry;
+        
+    throw response.error
   }
 }
 

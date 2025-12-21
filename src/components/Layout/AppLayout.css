@@ -1,4 +1,4 @@
-/* src/components/Layout/AppLayout.css */
+/* AppLayout.module.css */
 
 .app-root {
   min-height: 100vh;
@@ -10,7 +10,7 @@
 
 .app-header {
   height: 56px;
-  padding: 0 24px;
+  padding: 0 var(--space-md);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -21,40 +21,20 @@
 .app-logo {
   font-weight: 600;
   letter-spacing: 0.02em;
+  cursor: pointer;
 }
 
 .app-header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.app-theme-toggle {
-  font-size: 0.8rem;
-  padding: 0.4em 0.8em;
-}
-
-.app-user {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.app-user-name {
-  font-size: 0.9rem;
-  color: var(--color-muted);
-}
-
-.app-main {
-  flex: 1;
-  padding: 16px 24px;
+  gap: var(--space-sm);
 }
 
 .app-theme-toggle {
   position: relative;
   width: 44px;
   height: 24px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   border: 1px solid var(--color-border);
   padding: 0;
   display: inline-flex;
@@ -62,33 +42,28 @@
   justify-content: space-between;
   background: var(--color-bg-elevated);
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
 }
 
-/* бегунок */
 .app-theme-toggle::before {
   content: '';
   position: absolute;
   width: 20px;
   height: 20px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: linear-gradient(135deg, #fde68a, #f97316);
   box-shadow: 0 6px 12px rgba(249, 115, 22, 0.45);
   left: 2px;
   transition: transform 0.2s ease;
 }
 
-/* когда тёмная тема — бегунок справа, холодный градиент */
 :root[data-theme='dark'] .app-theme-toggle::before {
   transform: translateX(20px);
   background: linear-gradient(135deg, #38bdf8, #6366f1);
   box-shadow: 0 6px 14px rgba(37, 99, 235, 0.55);
 }
 
-/* сами иконки */
 .app-theme-icon {
   width: 50%;
   display: flex;
@@ -97,10 +72,7 @@
   font-size: 13px;
   opacity: 0.4;
   transform: scale(0.9);
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease,
-    filter 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .app-theme-icon[data-active='true'] {
@@ -109,7 +81,6 @@
   filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.8));
 }
 
-/* разные акценты для солнца/луны */
 .app-theme-icon--sun[data-active='true'] {
   filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.9));
 }
@@ -118,8 +89,18 @@
   filter: drop-shadow(0 0 5px rgba(56, 189, 248, 0.9));
 }
 
-.app-logo {
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  cursor: pointer;
+.app-user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.app-user-name {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.app-main {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
 }

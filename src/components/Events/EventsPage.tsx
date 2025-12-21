@@ -6,7 +6,7 @@ import React, {
 } from 'react';
 import { Link } from 'react-router-dom';
 import { eventsService } from '../../services/event-service';
-import type { EventShortEntry } from '@/api';
+import type { EventShortEntry } from '../../api';
 import styles from './Event.module.css';
 
 const LIMIT = 10;

@@ -1,4 +1,13 @@
-/* Базовые настройки шрифта и сглаживания */
+/* index.css — ГЛОБАЛЬНЫЕ СТИЛИ + ДИЗАЙН-ТОКЕНЫ */
+
+/* Reset / Box model */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Базовая типографика + сглаживание */
 :root {
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
     Avenir, Helvetica, Arial, sans-serif;
@@ -11,49 +20,117 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Светлая тема по умолчанию */
+/* Светлая тема (по умолчанию) */
 :root[data-theme="light"],
 :root:not([data-theme]) {
   color: #0f172a;
   background-color: #f9fafb;
 
+  /* Цвета фона */
   --color-bg: #f9fafb;
   --color-bg-elevated: #ffffff;
-  --color-border: #e5e7eb;
+  --color-bg-card: #ffffff;
+  --color-bg-hover: #f8fafc;
+  
+  /* Текст */
   --color-text: #0f172a;
-  --color-muted: #6b7280;
-
+  --color-text-muted: #6b7280;
+  --color-text-light: #9ca3af;
+  
+  /* Границы */
+  --color-border: #e5e7eb;
+  --color-border-light: #f3f4f6;
+  
+  /* Акценты */
   --color-primary: #4f46e5;
   --color-primary-hover: #4338ca;
   --color-primary-soft: #eef2ff;
-
+  --color-primary-light: rgba(79, 70, 229, 0.1);
+  
   --color-accent: #22c55e;
   --color-danger: #ef4444;
-
+  --color-danger-light: #fef2f2;
+  --color-danger-border: #fecaca;
+  
+  /* Радиусы */
+  --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
-  --shadow-soft: 0 10px 25px rgba(15, 23, 42, 0.08);
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+  
+  /* Тени */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  
+  /* Отступы */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
 }
 
 /* Тёмная тема */
 :root[data-theme="dark"] {
   color: #e5e7eb;
-  background-color: #191a1a;
+  background-color: #0f1117;
 
-  --color-bg: #191a1a;
-  --color-bg-elevated: #191a1a;
-  --color-border: #1f2937;
+  /* Цвета фона */
+  --color-bg: #0f1117;
+  --color-bg-elevated: #17181c;
+  --color-bg-card: #17181c;
+  --color-bg-hover: #1f2025;
+  
+  /* Текст */
   --color-text: #e5e7eb;
-  --color-muted: #9ca3af;
-
+  --color-text-muted: #9ca3af;
+  --color-text-light: #6b7280;
+  
+  /* Границы */
+  --color-border: #374151;
+  --color-border-light: #1f2937;
+  
+  /* Акценты */
   --color-primary: #6366f1;
   --color-primary-hover: #4f46e5;
-  --color-primary-soft: rgba(99, 102, 241, 0.1);
-
+  --color-primary-soft: rgba(99, 102, 241, 0.15);
+  --color-primary-light: rgba(99, 102, 241, 0.1);
+  
   --color-accent: #22c55e;
-  --color-danger: #ef4444;
-
+  --color-danger: #f87171;
+  --color-danger-light: rgba(248, 113, 113, 0.15);
+  --color-danger-border: rgba(248, 113, 113, 0.3);
+  
+  /* Радиусы (те же) */
+  --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
-  --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.75);
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+  
+  /* Тени */
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.25);
+  
+  /* Отступы */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+}
+
+/* Корневой layout */
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
 }
 
 body {
@@ -68,13 +145,14 @@ a {
   font-weight: 500;
   color: var(--color-primary);
   text-decoration: none;
+  transition: color 0.2s ease;
 }
 
 a:hover {
   color: var(--color-primary-hover);
 }
 
-/* Кнопки */
+/* Кнопки (глобальные) */
 button {
   border-radius: var(--radius-md);
   border: 1px solid transparent;
@@ -83,37 +161,40 @@ button {
   font-weight: 500;
   font-family: inherit;
   background-color: var(--color-primary);
-  color: #ffffff;
+  color: white;
   cursor: pointer;
-  transition:
-    background-color 0.18s ease,
-    border-color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.08s ease;
-  box-shadow: var(--shadow-soft);
+  transition: all 0.18s ease;
+  box-shadow: var(--shadow-sm);
 }
 
 button:hover {
   background-color: var(--color-primary-hover);
-  border-color: var(--color-primary-soft);
   transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
-button:focus,
 button:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* Вторичная кнопка */
-button.secondary {
+button.secondary,
+button[type="secondary"] {
   background-color: var(--color-bg-elevated);
   color: var(--color-text);
   border-color: var(--color-border);
   box-shadow: none;
 }
 
-button.secondary:hover {
-  background-color: var(--color-primary-soft);
+button.secondary:hover,
+button[type="secondary"]:hover {
+  background-color: var(--color-bg-hover);
   border-color: var(--color-primary);
 }

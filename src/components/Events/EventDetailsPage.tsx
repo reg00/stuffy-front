@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { eventsService } from '../../services/event-service';
-import type { GetEventEntry } from '@/api';
+import type { GetEventEntry } from '../../api';
 import styles from './Event.module.css';
 
 type RouteParams = {

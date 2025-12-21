@@ -4,8 +4,8 @@ import { Register } from './components/Auth/Register';
 import { ProtectedRoute } from './components/Auth/ProtectedRoute';
 import { EventsPage } from './components/Events/EventsPage';
 import { EventDetailsPage } from './components/Events/EventDetailsPage';
-import { EventParticipantsPage } from './components/Events/EventParticipantsPage';
-import { EventPurchasesPage } from './components/Events/EventPurchasesPage';
+import { ParticipantsPage } from './components/Participant/ParticipantsPage';
+import { PurchasesPage } from './components/Purchase/PurchasesPage';
 import { NotFoundPage } from './components/Errors/NotFoundPage';
 import { useAuthStore } from './store/auth-store';
 
@@ -22,8 +22,8 @@ function App() {
 
         <Route path="/events/:id" element={<ProtectedRoute> <EventDetailsPage /> </ProtectedRoute> }/>
 
-        <Route path="/events/:id/participants" element={<ProtectedRoute> <EventParticipantsPage /> </ProtectedRoute> } />
-        <Route path="/events/:id/purchases" element={<ProtectedRoute> <EventPurchasesPage /></ProtectedRoute>} />
+        <Route path="/events/:id/participants" element={<ProtectedRoute> <ParticipantsPage /> </ProtectedRoute> } />
+        <Route path="/events/:id/purchases" element={<ProtectedRoute> <PurchasesPage /></ProtectedRoute>} />
 
         <Route
           path="/"

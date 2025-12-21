@@ -1,4 +1,4 @@
-import { GetUserEntry } from "@/api";
+import { GetUserEntry } from "../api";
 
 export interface ApiError {
   errorCode: string;

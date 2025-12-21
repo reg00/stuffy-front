@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { authService } from '../services/auth-service';
-import { GetUserEntry } from '@/api';
+import { GetUserEntry } from '../api';
 import { apiClient } from '../services/api-client';
 
 const USER_STORAGE_KEY = 'user';

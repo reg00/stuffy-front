@@ -1,7 +1,9 @@
+import { UserShortEntry } from '../api';
 import {
   postApiV1AuthRegister,
   postApiV1AuthLogin,
   getApiV1AuthAccount,
+  getApiV1AuthUsers,
 } from '../api/sdk.gen';
 import { apiClient } from './api-client';
 
@@ -35,6 +37,15 @@ class AuthService {
       client: apiClient.getClient(),
     });
     return response.data;
+  }
+
+  async getUsers(userName: string | undefined) {
+    const response = await getApiV1AuthUsers({
+      query: {userName},
+      client: apiClient.getClient(),
+    });
+
+    return response.data as UserShortEntry[]
   }
 
   logout(): void {
