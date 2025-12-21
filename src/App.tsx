@@ -1,3 +1,4 @@
+// App.tsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from './components/Auth/Login';
 import { Register } from './components/Auth/Register';
@@ -15,15 +16,46 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* без layout */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        <Route path="/events" element={<ProtectedRoute> <EventsPage /> </ProtectedRoute>}/>
+        {/* с layout */}
+        <Route
+          path="/events"
+          element={
+            <ProtectedRoute>
+                <EventsPage />
+            </ProtectedRoute>
+          }
+        />
 
-        <Route path="/events/:id" element={<ProtectedRoute> <EventDetailsPage /> </ProtectedRoute> }/>
+        <Route
+          path="/events/:id"
+          element={
+            <ProtectedRoute>
+                <EventDetailsPage />
+            </ProtectedRoute>
+          }
+        />
 
-        <Route path="/events/:id/participants" element={<ProtectedRoute> <ParticipantsPage /> </ProtectedRoute> } />
-        <Route path="/events/:id/purchases" element={<ProtectedRoute> <PurchasesPage /></ProtectedRoute>} />
+        <Route
+          path="/events/:id/participants"
+          element={
+            <ProtectedRoute>
+                <ParticipantsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/events/:id/purchases"
+          element={
+            <ProtectedRoute>
+                <PurchasesPage />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/"
@@ -36,8 +68,7 @@ function App() {
           }
         />
 
-      <Route path="*" element={<NotFoundPage />} />
-
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>
   );

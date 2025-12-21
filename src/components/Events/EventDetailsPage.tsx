@@ -1,8 +1,24 @@
+// src/components/Events/EventDetailsPage.tsx
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
 import { eventsService } from '../../services/event-service';
 import type { GetEventEntry } from '../../api';
-import styles from './Event.module.css';
+
+import Container from '@mui/material/Container';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Avatar from '@mui/material/Avatar';
+import Skeleton from '@mui/material/Skeleton';
+import Chip from '@mui/material/Chip';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import GroupIcon from '@mui/icons-material/Group';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 type RouteParams = {
   id: string;
@@ -36,7 +52,7 @@ export const EventDetailsPage: React.FC = () => {
 
   useEffect(() => {
     loadEvent();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const handleImageError = (
@@ -50,115 +66,264 @@ export const EventDetailsPage: React.FC = () => {
   };
 
   if (!id) {
-    return <p>Некорректный идентификатор события.</p>;
+    return (
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Typography color="text.primary">
+          Некорректный идентификатор события.
+        </Typography>
+      </Container>
+    );
   }
 
   return (
-    <div className={styles.page}>
-      <div className={styles.container}>
-        <div className={styles.backRow}>
-          <Link to="/events" className={styles.backLink}>
-            ← Назад к событиям
-          </Link>
-        </div>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      {/* Рамка и фон, зависящие от темы */}
+      <Box
+        sx={{
+          borderRadius: 3,
+          border: theme => `1px solid ${theme.palette.divider}`,
+          bgcolor: 'background.paper',
+          p: 3,
+        }}
+      >
+        {/* Назад */}
+        <Button
+          component={RouterLink}
+          to="/events"
+          startIcon={<ArrowBackIcon />}
+          variant="text"
+          sx={{ mb: 2, color:'text.primary' }}
+        >
+          НАЗАД К СОБЫТИЯМ
+        </Button>
 
-        {isLoading && <p>Загружаем событие...</p>}
-
+        {/* Ошибка */}
         {error && (
-          <div className={styles.error}>
-            {error}
-            <button
-              className="secondary"
-              style={{ marginLeft: 8 }}
-              onClick={loadEvent}
+          <Box mb={2}>
+            <Alert
+              severity="error"
+              action={
+                <Button color="inherit" size="small" onClick={loadEvent}>
+                  Повторить
+                </Button>
+              }
             >
-              Повторить
-            </button>
-          </div>
+              {error}
+            </Alert>
+          </Box>
         )}
 
+        {/* Лоадер */}
+        {isLoading && !event && (
+          <Card
+            sx={{
+              bgcolor: 'background.paper',
+              boxShadow: 1,
+              mb: 3,
+            }}
+          >
+            <CardContent>
+              <Stack direction="row" spacing={2}>
+                <Skeleton variant="rounded" width={120} height={120} />
+                <Box sx={{ flexGrow: 1 }}>
+                  <Skeleton width="60%" />
+                  <Skeleton width="40%" />
+                  <Skeleton width="80%" />
+                </Box>
+              </Stack>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Контент */}
         {!isLoading && !error && event && (
           <>
-            <div className={styles.header}>
-              <div className={styles.cover}>
-                {event.mediaUri ? (
-                  <img
-                    src={event.mediaUri}
-                    alt={event.name}
-                    onError={handleImageError}
-                    className={styles.coverImg}
-                  />
-                ) : (
-                  <span className={styles.coverPlaceholder}>+</span>
-                )}
-              </div>
+            {/* Шапка события */}
+            <Card
+              sx={{
+                mb: 3,
+                bgcolor: 'background.default',
+                boxShadow: 1,
+              }}
+            >
+              <CardContent>
+                <Stack direction="row" spacing={2}>
+                  {/* Обложка */}
+                  {event.mediaUri ? (
+                    <Box
+                      sx={{
+                        width: 120,
+                        height: 120,
+                        borderRadius: 2,
+                        overflow: 'hidden',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Box
+                        component="img"
+                        src={event.mediaUri}
+                        alt={event.name}
+                        onError={handleImageError}
+                        sx={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                        }}
+                      />
+                    </Box>
+                  ) : (
+                    <Avatar
+                      variant="rounded"
+                      sx={{
+                        width: 120,
+                        height: 120,
+                        fontSize: 40,
+                      }}
+                    >
+                      +
+                    </Avatar>
+                  )}
 
-              <div className={styles.headerInfo}>
-                <h1 className={styles.title}>{event.name}</h1>
+                  {/* Инфо */}
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Typography
+                      variant="h5"
+                      component="h1"
+                      gutterBottom
+                      color="text.primary"
+                    >
+                      {event.name}
+                    </Typography>
 
-                <div className={styles.meta}>
-                  <span>
-                    {new Date(event.eventDateStart).toLocaleDateString()}
-                  </span>
-                  <span>•</span>
-                  <span>
-                    {event.user?.name ?? 'Админ'}
-                    {event.user && ' (админ)'}
-                  </span>
-                </div>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      alignItems="center"
+                      sx={{ mb: 1 }}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        {new Date(event.eventDateStart).toLocaleDateString()}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                      >
+                        •
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {event.user?.name ?? 'Админ'}
+                        {event.user && ' (админ)'}
+                      </Typography>
+                      {event.isCompleted && (
+                        <Chip
+                          label="Завершено"
+                          size="small"
+                          color="info"
+                          variant="outlined"
+                        />
+                      )}
+                    </Stack>
 
-                {event.description && (
-                  <p className={styles.description}>{event.description}</p>
-                )}
-              </div>
-            </div>
+                    {event.description && (
+                      <Typography variant="body2" color="text.secondary">
+                        {event.description}
+                      </Typography>
+                    )}
+                  </Box>
+                </Stack>
+              </CardContent>
+            </Card>
 
-            <div className={styles.sections}>
-              <button
-                type="button"
-                className={styles.sectionBtn}
+            {/* Разделы */}
+            <Stack spacing={1.5} sx={{ mb: 3 }}>
+              <Button
+                variant="outlined"
+                fullWidth
                 onClick={() =>
                   navigate(`/events/${id}/participants`, {
                     state: { participants: event.participants ?? [] },
                   })
                 }
+                sx={{
+                  justifyContent: 'space-between',
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  py: 1.5,
+                  bgcolor: 'background.default',
+                  borderColor: 'divider',
+                }}
               >
-                <div className={styles.sectionLeft}>
-                  <div className={styles.iconRound} />
-                  <span className={styles.sectionLabel}>Участники</span>
-                </div>
-                <span className={styles.sectionArrow}>›</span>
-              </button>
+                <Stack direction="row" spacing={1.5} alignItems="center">
+                  <Box
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: '50%',
+                      bgcolor: 'primary.main',
+                      color: 'primary.contrastText',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <GroupIcon fontSize="small" />
+                  </Box>
+                  <Typography color="text.primary">Участники</Typography>
+                </Stack>
+                <ArrowForwardIosIcon fontSize="small" />
+              </Button>
 
-              <button
-                type="button"
-                className={styles.sectionBtn}
+              <Button
+                variant="outlined"
+                fullWidth
                 onClick={() =>
                   navigate(`/events/${id}/purchases`, {
                     state: { purchases: event.purchases ?? [] },
                   })
                 }
+                sx={{
+                  justifyContent: 'space-between',
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  py: 1.5,
+                  bgcolor: 'background.default',
+                  borderColor: 'divider',
+                }}
               >
-                <div className={styles.sectionLeft}>
-                  <div className={styles.iconSquare} />
-                  <span className={styles.sectionLabel}>Покупки</span>
-                </div>
-                <span className={styles.sectionArrow}>›</span>
-              </button>
-            </div>
+                <Stack direction="row" spacing={1.5} alignItems="center">
+                  <Box
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 1,
+                      bgcolor: 'secondary.main',
+                      color: 'secondary.contrastText',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <ShoppingCartIcon fontSize="small" />
+                  </Box>
+                  <Typography color="text.primary">Покупки</Typography>
+                </Stack>
+                <ArrowForwardIosIcon fontSize="small" />
+              </Button>
+            </Stack>
 
-            <div className={styles.finishWrap}>
-              <button
-                type="button"
-                className={styles.finishBtn}
+            {/* Завершить ивент */}
+            <Box textAlign="right">
+              <Button
+                variant="contained"
+                color="error"
                 onClick={handleFinishEvent}
               >
                 Завершить ивент
-              </button>
-            </div>
+              </Button>
+            </Box>
           </>
         )}
-      </div>
-    </div>
+      </Box>
+    </Container>
   );
 };

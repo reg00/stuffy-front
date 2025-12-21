@@ -1,13 +1,27 @@
+// src/components/Events/EventsPage.tsx
 import React, {
   useCallback,
   useEffect,
   useRef,
   useState,
 } from 'react';
-import { Link } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import { eventsService } from '../../services/event-service';
 import type { EventShortEntry } from '../../api';
-import styles from './Event.module.css';
+
+import Container from '@mui/material/Container';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
+import Chip from '@mui/material/Chip';
+import CircularProgress from '@mui/material/CircularProgress';
+import Stack from '@mui/material/Stack';
 
 const LIMIT = 10;
 
@@ -92,72 +106,130 @@ export const EventsPage: React.FC = () => {
   }, [loadEvents]);
 
   return (
-    <div className={styles.page}>
-      <div className={styles.container}>
-        <h1 className={styles.eventsTitle}>События</h1>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Typography variant="h4" component="h1" gutterBottom color="text.primary">
+        События
+      </Typography>
 
-        {error && (
-          <div className={styles.error}>
+      {error && (
+        <Box mb={2}>
+          <Alert
+            severity="error"
+            action={
+              <Button color="inherit" size="small" onClick={loadEvents}>
+                Повторить
+              </Button>
+            }
+          >
             {error}
-            <button
-              className="secondary"
-              style={{ marginLeft: 8 }}
-              onClick={loadEvents}
-            >
-              Повторить
-            </button>
-          </div>
-        )}
+          </Alert>
+        </Box>
+      )}
 
-        {!events.length && !isLoading && !error && (
-          <p className={styles.emptyText}>Событий пока нет.</p>
-        )}
+      {!events.length && !isLoading && !error && (
+        <Typography variant="body1" color="text.secondary">
+          Событий пока нет.
+        </Typography>
+      )}
 
-        <div className={styles.eventsList}>
-          {events.map(event => (
-            <Link
-              key={event.id}
+      <List
+        sx={{
+          mt: 1,
+          p: 0,
+          bgcolor: 'transparent',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 1.5,
+        }}
+      >
+        {events.map(event => (
+          <ListItem
+            key={event.id}
+            disablePadding
+            secondaryAction={
+              <ListItemSecondaryAction>
+                <Chip
+                  size="small"
+                  label={event.isCompleted ? 'Завершено' : 'Активно'}
+                  color={event.isCompleted ? 'info' : 'success'}
+                  variant={event.isCompleted ? 'outlined' : 'filled'}
+                />
+              </ListItemSecondaryAction>
+            }
+            sx={{
+              '& .MuiListItemSecondaryAction-root': { right: 16 },
+              borderRadius: 2,
+              bgcolor: 'background.paper',
+              boxShadow: 1,
+            }}
+          >
+            <ListItemButton
+              component={RouterLink}
               to={`/events/${event.id}`}
-              className={styles.eventCardLink}
+              alignItems="flex-start"
             >
-              <div className={styles.eventCard}>
-                <div className={styles.eventCardHeader}>
-                  <h2 className={styles.eventCardTitle}>{event.name}</h2>
-
-                  <span
-                    className={
-                      event.isCompleted
-                        ? styles.eventStatusDone
-                        : styles.eventStatusActive
-                    }
+              <ListItemText
+                primary={
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight={600}
+                    component="span"
+                    color="text.primary"
                   >
-                    {event.isCompleted ? 'Завершено' : 'Активно'}
+                    {event.name}
+                  </Typography>
+                }
+                secondary={
+                  <span>
+                    {event.description && (
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        component="span"
+                        display="block"
+                      >
+                        {event.description}
+                      </Typography>
+                    )}
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      component="span"
+                      display="block"
+                    >
+                      Начало:{' '}
+                      {new Date(event.eventDateStart).toLocaleString()}
+                    </Typography>
                   </span>
-                </div>
+                }
+              />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
 
-                {event.description && (
-                  <p className={styles.eventCardDescription}>
-                    {event.description}
-                  </p>
-                )}
+      <Box ref={sentinelRef} sx={{ height: 1 }} />
 
-                <p className={styles.eventCardDate}>
-                  Начало: {new Date(event.eventDateStart).toLocaleString()}
-                </p>
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        <div ref={sentinelRef} className={styles.eventsSentinel} />
-
+      <Box mt={2}>
         {isLoading && (
-          <p className={styles.eventsLoadingText}>Загружаем ещё...</p>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <CircularProgress size={20} />
+            <Typography variant="body2" color="text.primary">
+              Загружаем ещё...
+            </Typography>
+          </Stack>
         )}
+
         {!hasMore && events.length > 0 && (
-          <p className={styles.eventsEndText}>Больше событий нет.</p>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ mt: 1 }}
+          >
+            Больше событий нет.
+          </Typography>
         )}
-      </div>
-    </div>
+      </Box>
+    </Container>
   );
 };
