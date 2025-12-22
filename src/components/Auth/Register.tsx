@@ -1,6 +1,6 @@
 // src/pages/auth/Register.tsx
-import React, { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuthStore } from '../../store/auth-store';
 
 import Box from '@mui/material/Box';
@@ -16,14 +16,45 @@ export const Register: React.FC = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  const location = useLocation();
   const navigate = useNavigate();
-  const { register, isLoading, error } = useAuthStore();
+  const { clearError, register, isLoading, error } = useAuthStore();
+
+  useEffect(() => {
+    clearError();
+  }, [location, clearError]);
+
+  const validatePassword = (value: string): string | null => {
+    if (value.length < 6) {
+      return 'Длина пароля должна быть не менее 6 символов.';
+    }
+    if (!/^[A-Za-z0-9]+$/.test(value)) {
+      return 'Пароль должен содержать только латинские буквы и цифры.';
+    }
+    if (!/[A-Z]/.test(value)) {
+      return 'Пароль должен содержать хотя бы одну заглавную букву.';
+    }
+    if (!/\d/.test(value)) {
+      return 'Пароль должен содержать хотя бы одну цифру.';
+    }
+    return null;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const pwdError = validatePassword(password);
+    if (pwdError) {
+      setPasswordError(pwdError);
+      return;
+    }
+    setPasswordError(null);
+
     try {
-      await register(username, email, password);
-      navigate('/events');
+      await register(username, email, password, true);
+      navigate('/verify-email');
     } catch (err) {
       console.error(err);
     }
@@ -74,7 +105,7 @@ export const Register: React.FC = () => {
           </Alert>
         )}
 
-        <Box component="form" onSubmit={handleSubmit}>
+        <Box component="form" onSubmit={handleSubmit} noValidate>
           <Stack spacing={2.5}>
             <Box>
               <Typography
@@ -166,6 +197,7 @@ export const Register: React.FC = () => {
                 fullWidth
                 size="small"
                 variant="outlined"
+                error={Boolean(passwordError)}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     fontSize: 14,
@@ -173,6 +205,56 @@ export const Register: React.FC = () => {
                   },
                 }}
               />
+
+              <Box
+                sx={{
+                  mt: 0.75,
+                  p: 1,
+                  borderRadius: 1,
+                  bgcolor: 'rgba(102, 126, 234, 0.04)',
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  sx={{
+                    display: 'block',
+                    mb: 0.25,
+                    color: '#5b6ee0',
+                    fontWeight: 600,
+                    fontSize: 11,
+                  }}
+                >
+                  Требования к паролю:
+                </Typography>
+                <ul
+                  style={{
+                    margin: 0,
+                    paddingLeft: 18,
+                    color: '#5b6ee0',
+                    fontSize: 11,
+                    lineHeight: 1.4,
+                  }}
+                >
+                  <li>Длина не менее 6 символов.</li>
+                  <li>Только латинские буквы и цифры.</li>
+                  <li>Хотя бы одна заглавная буква (A–Z).</li>
+                  <li>Хотя бы одна цифра (0–9).</li>
+                </ul>
+              </Box>
+
+              {passwordError && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    display: 'block',
+                    mt: 0.5,
+                    color: '#d32f2f',
+                    fontSize: 11,
+                  }}
+                >
+                  {passwordError}
+                </Typography>
+              )}
             </Box>
 
             <Button

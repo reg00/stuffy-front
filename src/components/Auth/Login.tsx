@@ -1,6 +1,6 @@
 // src/pages/auth/Login.tsx
-import React, { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuthStore } from '../../store/auth-store';
 
 import Box from '@mui/material/Box';
@@ -16,7 +16,13 @@ export const Login: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
-  const { login, isLoading, error } = useAuthStore();
+  const location = useLocation();
+  const { clearError, login, isLoading, error } = useAuthStore();
+
+   // ✅ Правильно: location объект мутируется роутером
+   useEffect(() => {
+     clearError();
+   }, [location, clearError]); // location целиком, не .pathname
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

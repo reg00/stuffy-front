@@ -1,3 +1,4 @@
+// src/store/auth-store.ts
 import { create } from 'zustand';
 import { authService } from '../services/auth-service';
 import { GetUserEntry } from '../api';
@@ -23,9 +24,10 @@ interface AuthState {
 
   setUser: (user: GetUserEntry | null) => void;
   setError: (error: string | null) => void;
+  clearError: () => void;
   setLoading: (loading: boolean) => void;
   login: (username: string, password: string) => Promise<void>;
-  register: (username: string, email: string, password: string) => Promise<void>;
+  register: (username: string, email: string, password: string, skipAutoLogin?: boolean) => Promise<void>;
   logout: () => void;
 }
 
@@ -50,6 +52,8 @@ export const useAuthStore = create<AuthState>((set) => {
         isAuthenticated: !!user && authService.isAuthenticated(),
       });
     },
+
+    clearError: () => set({ error: null }),
 
     setError: (error) => set({ error }),
 
@@ -81,23 +85,29 @@ export const useAuthStore = create<AuthState>((set) => {
       }
     },
 
-    // register: после регистрации сразу логинимся, без отдельного account
-    register: async (username, email, password) => {
+    // register: после регистрации сразу логинимся, если НЕ указан skipAutoLogin
+    register: async (username, email, password, skipAutoLogin = false) => {
       set({ isLoading: true, error: null });
       try {
         await authService.register(username, email, password);
 
-        const token = await authService.login(username, password);
-        apiClient.setToken(token!);
+        if (!skipAutoLogin) {
+          // ✅ Обычная логика автологина (только для других случаев)
+          const token = await authService.login(username, password);
+          apiClient.setToken(token!);
 
-        const user = await authService.getAccount();
-        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+          const user = await authService.getAccount();
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
 
-        set({
-          user,
-          isAuthenticated: true,
-          isLoading: false,
-        });
+          set({
+            user,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        } else {
+          // ✅ Для регистрации с подтверждением email - НЕ логинимся
+          set({ isLoading: false });
+        }
       } catch (error: unknown) {
         const errorMessage =
           error instanceof Error ? error.message : 'Ошибка при регистрации';

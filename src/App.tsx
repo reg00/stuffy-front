@@ -10,6 +10,7 @@ import { PurchasesPage } from './components/Purchase/PurchasesPage';
 import { NotFoundPage } from './components/Errors/NotFoundPage';
 import { useAuthStore } from './store/auth-store';
 import { ConfirmEmail } from './components/Auth/ConfirmEmail';
+import { EmailConfirmed } from './components/Auth/EmailConfirmed';
 
 function App() {
   const { isAuthenticated } = useAuthStore();
@@ -21,6 +22,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<ConfirmEmail />} />
+        <Route path="/email-confirm" element={<EmailConfirmed />} />
 
         {/* с layout */}
         <Route

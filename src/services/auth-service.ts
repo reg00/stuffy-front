@@ -4,6 +4,7 @@ import {
   postApiV1AuthLogin,
   getApiV1AuthAccount,
   getApiV1AuthUsers,
+  getApiV1AuthEmailConfirm,
 } from '../api/sdk.gen';
 import { apiClient } from './api-client';
 
@@ -54,6 +55,18 @@ class AuthService {
 
     if(response.data)
           return response.data as UserShortEntry[];
+            
+    throw response.error
+  }
+
+  async confirmEmail(login: string, code: string) {
+    const response = await getApiV1AuthEmailConfirm({
+      query: {login, code},
+      client: apiClient.getClient()
+    })
+
+    if(response.data)
+          return response.data;
             
     throw response.error
   }
