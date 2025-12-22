@@ -2,10 +2,11 @@
 import {
   getApiV1Events,
   getApiV1EventsByEventId,
+  patchApiV1EventsByEventId,
   postApiV1Events,
 } from '../api/sdk.gen';
 import { apiClient } from './api-client';
-import type { EventShortEntryResponse, EventShortEntry, GetEventEntry, AddEventEntry } from '../api';
+import type { EventShortEntryResponse, EventShortEntry, GetEventEntry, AddEventEntry, UpdateEventEntry } from '../api';
 
 class EventsService {
   async getEvents(offset: number = 0, limit: number = 20): Promise<EventShortEntry[]> {
@@ -35,6 +36,19 @@ class EventsService {
   async createEvent(payload: AddEventEntry): Promise<EventShortEntry> {
     const response = await postApiV1Events({
       body: payload,
+      client: apiClient.getClient(),
+    });
+
+    if(response.data)
+      return response.data as EventShortEntry;
+        
+    throw response.error
+  }
+
+  async editEvent(eventId: string, event: UpdateEventEntry): Promise<EventShortEntry> {
+    const response = await patchApiV1EventsByEventId({
+      path: {eventId},
+      body: event,
       client: apiClient.getClient(),
     });
 

@@ -9,6 +9,7 @@ import { ParticipantsPage } from './components/Participant/ParticipantsPage';
 import { PurchasesPage } from './components/Purchase/PurchasesPage';
 import { NotFoundPage } from './components/Errors/NotFoundPage';
 import { useAuthStore } from './store/auth-store';
+import { ConfirmEmail } from './components/Auth/ConfirmEmail';
 
 function App() {
   const { isAuthenticated } = useAuthStore();
@@ -19,6 +20,7 @@ function App() {
         {/* без layout */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/verify-email" element={<ConfirmEmail />} />
 
         {/* с layout */}
         <Route

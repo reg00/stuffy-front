@@ -17,7 +17,11 @@ class AuthService {
       },
       client: apiClient.getClient(),
     });
-    return response.data;
+    
+    if(response.data)
+          return response.data;
+            
+    throw response.error
   }
 
   async login(username: string, password: string) {
@@ -29,7 +33,10 @@ class AuthService {
       client: apiClient.getClient(),
     });
 
-    return response.data;
+    if(response.data)
+          return response.data;
+            
+    throw response.error
   }
 
   async getAccount() {
@@ -45,7 +52,10 @@ class AuthService {
       client: apiClient.getClient(),
     });
 
-    return response.data as UserShortEntry[]
+    if(response.data)
+          return response.data as UserShortEntry[];
+            
+    throw response.error
   }
 
   logout(): void {

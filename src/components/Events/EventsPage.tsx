@@ -22,6 +22,9 @@ import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 import Stack from '@mui/material/Stack';
+import IconButton from '@mui/material/IconButton';
+import EditIcon from '@mui/icons-material/Edit';
+import { AddEventModal } from './AddEventModal';
 
 const LIMIT = 10;
 
@@ -37,6 +40,11 @@ export const EventsPage: React.FC = () => {
   const loadingRef = useRef(false);
   const hasMoreRef = useRef(true);
   const offsetRef = useRef(0);
+
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<EventShortEntry | null>(
+    null,
+  );
 
   const loadEvents = useCallback(async () => {
     if (loadingRef.current || !hasMoreRef.current) return;
@@ -105,11 +113,40 @@ export const EventsPage: React.FC = () => {
     };
   }, [loadEvents]);
 
+  const handleCreated = (created: EventShortEntry) => {
+    // новое событие в начало списка
+    setEvents(prev => [created, ...prev]);
+  };
+
+  const handleUpdated = (updated: EventShortEntry) => {
+    setEvents(prev => prev.map(e => (e.id === updated.id ? updated : e)));
+  };
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom color="text.primary">
-        События
-      </Typography>
+      {/* Заголовок + кнопка создать */}
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{ mb: 2 }}
+      >
+        <Typography
+          variant="h4"
+          component="h1"
+          color="text.primary"
+        >
+          События
+        </Typography>
+
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => setIsCreateOpen(true)}
+        >
+          Создать событие
+        </Button>
+      </Stack>
 
       {error && (
         <Box mb={2}>
@@ -147,12 +184,24 @@ export const EventsPage: React.FC = () => {
             key={event.id}
             disablePadding
             secondaryAction={
-              <ListItemSecondaryAction>
+              <ListItemSecondaryAction
+                sx={{ display: 'flex', alignItems: 'center', gap: 1, right: 16 }}
+              >
                 <Chip
                   size="small"
                   label={event.isCompleted ? 'Завершено' : 'Активно'}
                   color={event.isCompleted ? 'info' : 'success'}
                 />
+                <IconButton
+                  edge="end"
+                  aria-label="Редактировать"
+                  title="Редактировать"
+                  onClick={() => setEditingEvent(event)}
+                  size="small"
+                  color="primary"
+                >
+                  <EditIcon fontSize="small" />
+                </IconButton>
               </ListItemSecondaryAction>
             }
             sx={{
@@ -229,6 +278,24 @@ export const EventsPage: React.FC = () => {
           </Typography>
         )}
       </Box>
+
+      {/* Модалки */}
+      <AddEventModal
+        mode="create"
+        open={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        onCreated={handleCreated}
+      />
+
+      {editingEvent && (
+        <AddEventModal
+          mode="edit"
+          open={!!editingEvent}
+          event={editingEvent}
+          onClose={() => setEditingEvent(null)}
+          onUpdated={handleUpdated}
+        />
+      )}
     </Container>
   );
 };

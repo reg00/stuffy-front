@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 // src/pages/events/AddPurchaseModal.tsx
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type {
