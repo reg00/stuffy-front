@@ -1,10 +1,25 @@
 // src/pages/events/EventParticipantsPage.tsx
 import React, { useMemo, useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useParams } from 'react-router-dom';
 import type { ParticipantShortEntry } from '../../api';
-import styles from './Participant.module.css';
 import { participantService } from '../../services/patricipant-service';
 import { AddParticipantModal } from './AddParticipantModal';
+
+import Container from '@mui/material/Container';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Alert from '@mui/material/Alert';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemAvatar from '@mui/material/ListItemAvatar';
+import Avatar from '@mui/material/Avatar';
+import ListItemText from '@mui/material/ListItemText';
+import IconButton from '@mui/material/IconButton';
+import Stack from '@mui/material/Stack';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import PersonIcon from '@mui/icons-material/Person';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 type RouteParams = { id: string };
 
@@ -19,15 +34,15 @@ export const ParticipantsPage: React.FC = () => {
 
   const initialParticipants = useMemo(
     () => state?.participants ?? [],
-    [state]
+    [state],
   );
 
   const [participants, setParticipants] = useState<ParticipantShortEntry[]>(
-    initialParticipants
+    initialParticipants,
   );
-
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   if (!eventId) return null;
 
@@ -36,31 +51,30 @@ export const ParticipantsPage: React.FC = () => {
     if (!ok) return;
 
     try {
+      setError(null);
       setDeletingId(participantId);
       await participantService.deleteParticipant(eventId, participantId);
-
-      setParticipants((prev) => prev.filter((p) => p.id !== participantId));
+      setParticipants(prev => prev.filter(p => p.id !== participantId));
+    } catch (e: unknown) {
+      const msg =
+        e instanceof Error ? e.message : 'Не удалось удалить участника';
+      setError(msg);
     } finally {
       setDeletingId(null);
     }
   };
 
   const handleCreated = (createdParticipantId?: string) => {
-    // Если бэкенд возвращает короткую сущность участника — лучше передавать её и добавлять в список.
-    // Сейчас у нас есть только id, поэтому можно:
-    // 1) ничего не делать и попросить пользователя перезайти на страницу
-    // 2) или сделать fetch по id и добавить полноценно
-    // Покажу вариант с дозагрузкой.
     if (!createdParticipantId) return;
 
     (async () => {
       try {
         const full = await participantService.getParticipantById(
           eventId,
-          createdParticipantId
+          createdParticipantId,
         );
 
-        setParticipants((prev) => [
+        setParticipants(prev => [
           ...prev,
           {
             id: full.id,
@@ -74,60 +88,123 @@ export const ParticipantsPage: React.FC = () => {
   };
 
   return (
-    <div className={styles.page}>
-      <div className={styles.container}>
-        <div className={styles.backRow}>
-          <Link to={`/events/${eventId}`} className={styles.backLink}>
-            ← Назад к ивенту
-          </Link>
-        </div>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box
+        sx={{
+          borderRadius: 3,
+          border: theme => `1px solid ${theme.palette.divider}`,
+          bgcolor: 'background.paper',
+          p: 3,
+        }}
+      >
+        {/* Назад + заголовок + Добавить */}
+        <Stack
+          direction="row"
+          spacing={2}
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{ mb: 3 }}
+        >
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Button
+              sx={{ mb: 2, color:'text.primary' }}
+              component={RouterLink}
+              to={`/events/${eventId}`}
+              startIcon={<ArrowBackIcon />}
+              variant="text"
+            >
+              Назад к ивенту
+            </Button>
+          </Stack>
 
-        <div className={styles.narrow}>
-          <h1 className={styles.sectionTitle}>Участники</h1>
-
-          <button
-            type="button"
+          <Button
+            variant="contained"
+            color="primary"
             onClick={() => setIsAddOpen(true)}
-            className={styles.addButton}
           >
             + Добавить участника
-          </button>
+          </Button>
+        </Stack>
 
-          {participants.length === 0 && (
-            <p className={styles.emptyText}>
-              Участников пока нет. Добавьте первого.
-            </p>
-          )}
+        <Typography
+          variant="h5"
+          component="h1"
+          gutterBottom
+          color="text.primary"
+        >
+          Участники
+        </Typography>
 
-          <ul className={styles.list}>
-            {participants.map((p) => (
-              <li key={p.id} className={styles.listItem}>
-                <div className={styles.avatar} />
-                <span className={styles.participantName}>
-                  {p.name || 'Без имени'}
-                </span>
+        {error && (
+          <Box mb={2}>
+            <Alert severity="error">{error}</Alert>
+          </Box>
+        )}
 
-                <button
-                  type="button"
-                  className={styles.iconButton}
-                  onClick={() => handleDelete(p.id)}
-                  disabled={deletingId === p.id}
+        {participants.length === 0 && (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Участников пока нет. Добавьте первого.
+          </Typography>
+        )}
+
+        {/* Список участников */}
+        <List
+          sx={{
+            mt: 2,
+            p: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1,
+          }}
+        >
+          {participants.map(p => (
+            <ListItem
+              key={p.id}
+              sx={{
+                borderRadius: 2,
+                bgcolor: 'background.default',
+                boxShadow: 1,
+              }}
+              secondaryAction={
+                <IconButton
+                  edge="end"
                   aria-label="Удалить участника"
                   title="Удалить"
+                  onClick={() => handleDelete(p.id)}
+                  disabled={deletingId === p.id}
+                  color="error"
                 >
-                  {deletingId === p.id ? '...' : '🗑️'}
-                </button>
-              </li>
-            ))}
-          </ul>
+                  {deletingId === p.id ? '…' : <DeleteIcon />}
+                </IconButton>
+              }
+            >
+              <ListItemAvatar>
+                <Avatar>
+                  <PersonIcon />
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText
+                primary={
+                  p.name && p.name.trim().length > 0
+                    ? p.name
+                    : 'Без имени'
+                }
+              />
+            </ListItem>
+          ))}
+        </List>
 
-          {!state && (
-            <p className={styles.hintText}>
-              Страница открыта без state — вернитесь на детальную ивента и зайдите повторно.
-            </p>
-          )}
-        </div>
-      </div>
+        {!state && (
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ mt: 2 }}
+          >
+            Страница открыта без state — вернитесь на детальную ивента и
+            зайдите повторно.
+          </Typography>
+        )}
+      </Box>
 
       <AddParticipantModal
         eventId={eventId}
@@ -135,6 +212,6 @@ export const ParticipantsPage: React.FC = () => {
         onClose={() => setIsAddOpen(false)}
         onCreated={handleCreated}
       />
-    </div>
+    </Container>
   );
 };

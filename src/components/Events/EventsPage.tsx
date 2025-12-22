@@ -152,7 +152,6 @@ export const EventsPage: React.FC = () => {
                   size="small"
                   label={event.isCompleted ? 'Завершено' : 'Активно'}
                   color={event.isCompleted ? 'info' : 'success'}
-                  variant={event.isCompleted ? 'outlined' : 'filled'}
                 />
               </ListItemSecondaryAction>
             }

@@ -5,7 +5,22 @@ import { authService } from '../../services/auth-service';
 import { participantService } from '../../services/patricipant-service';
 import { useDebounce } from '../../hooks/useDebounce';
 import { isApiError } from '../../utils/api-error';
-import styles from './Participant.module.css';
+
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormControl from '@mui/material/FormControl';
+import FormLabel from '@mui/material/FormLabel';
+import Alert from '@mui/material/Alert';
+import Stack from '@mui/material/Stack';
+import CircularProgress from '@mui/material/CircularProgress';
+import Typography from '@mui/material/Typography';
 
 type Props = {
   eventId: string;
@@ -39,7 +54,7 @@ export const AddParticipantModal: React.FC<Props> = ({
     return fallback;
   };
 
-  // 1) Первичная загрузка — сразу при открытии модалки (без ввода)
+  // 1) Первичная загрузка — при открытии модалки
   useEffect(() => {
     if (!isOpen) return;
 
@@ -50,15 +65,21 @@ export const AddParticipantModal: React.FC<Props> = ({
         setError(null);
         setIsSearching(true);
         setSelectedUserId('');
+        setUsers([]);
 
-        // ВАЖНО: начальная загрузка без query
         const data = await authService.getUsers(undefined);
 
         if (cancelled) return;
-        setUsers((data ?? []).filter((u): u is UserShortEntry => Boolean(u && u.id)));
+        setUsers(
+          (data ?? []).filter(
+            (u): u is UserShortEntry => Boolean(u && u.id),
+          ),
+        );
       } catch (e) {
         if (cancelled) return;
-        setError(getErrorMessage(e, 'Не удалось загрузить пользователей.'));
+        setError(
+          getErrorMessage(e, 'Не удалось загрузить пользователей.'),
+        );
         setUsers([]);
       } finally {
         if (!cancelled) setIsSearching(false);
@@ -70,10 +91,10 @@ export const AddParticipantModal: React.FC<Props> = ({
     };
   }, [isOpen]);
 
-  // 2) Debounced поиск — только когда пользователь что-то ввёл
+  // 2) Debounced поиск
   useEffect(() => {
     if (!isOpen) return;
-    if (!hasQuery) return; // если поле пустое — показываем первичный список
+    if (!hasQuery) return;
 
     let cancelled = false;
 
@@ -82,14 +103,24 @@ export const AddParticipantModal: React.FC<Props> = ({
         setError(null);
         setIsSearching(true);
         setSelectedUserId('');
+        setUsers([]);
 
         const data = await authService.getUsers(trimmed);
 
         if (cancelled) return;
-        setUsers((data ?? []).filter((u): u is UserShortEntry => Boolean(u && u.id)));
+        setUsers(
+          (data ?? []).filter(
+            (u): u is UserShortEntry => Boolean(u && u.id),
+          ),
+        );
       } catch (e) {
         if (cancelled) return;
-        setError(getErrorMessage(e, 'Не удалось выполнить поиск пользователей.'));
+        setError(
+          getErrorMessage(
+            e,
+            'Не удалось выполнить поиск пользователей.',
+          ),
+        );
         setUsers([]);
       } finally {
         if (!cancelled) setIsSearching(false);
@@ -101,17 +132,13 @@ export const AddParticipantModal: React.FC<Props> = ({
     };
   }, [isOpen, hasQuery, trimmed]);
 
-  // Esc закрывает модалку
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isOpen, onClose]);
+  const handleClose = () => {
+    setQuery('');
+    setUsers([]);
+    setSelectedUserId('');
+    setError(null);
+    onClose();
+  };
 
   const handleCreate = async () => {
     if (!selectedUserId) return;
@@ -124,17 +151,14 @@ export const AddParticipantModal: React.FC<Props> = ({
         userId: selectedUserId,
       });
 
-      // защита от undefined, чтобы не падать чтением created.id
       if (!created?.id) {
-        throw new Error('Пустой ответ от API при добавлении участника (нет id).');
+        throw new Error(
+          'Пустой ответ от API при добавлении участника (нет id).',
+        );
       }
 
       onCreated(created.id);
-      onClose();
-
-      setQuery('');
-      setUsers([]);
-      setSelectedUserId('');
+      handleClose();
     } catch (e) {
       setError(getErrorMessage(e, 'Не удалось добавить участника.'));
     } finally {
@@ -142,74 +166,92 @@ export const AddParticipantModal: React.FC<Props> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className={styles.backdrop} onMouseDown={onClose} role="presentation">
-      <div
-        className={styles.modal}
-        onMouseDown={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Добавить участника"
-      >
-        <div className={styles.header}>
-          <h2 className={styles.title}>Добавить участника</h2>
-          <button className={styles.closeBtn} onClick={onClose} type="button">
-            ✕
-          </button>
-        </div>
+    <Dialog
+      open={isOpen}
+      onClose={handleClose}
+      maxWidth="sm"
+      fullWidth
+      aria-labelledby="add-participant-title"
+    >
+      <DialogTitle id="add-participant-title">
+        Добавить участника
+      </DialogTitle>
 
-        <label className={styles.label}>
-          Поиск пользователя
-          <input
-            className={styles.input}
+      <DialogContent dividers>
+        <Stack spacing={2}>
+          <TextField
+            label="Поиск пользователя"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={e => setQuery(e.target.value)}
             placeholder="Начните вводить имя..."
             autoFocus
+            fullWidth
+            size="small"
           />
-        </label>
 
-        {error && <div className={styles.error}>{error}</div>}
+          {error && <Alert severity="error">{error}</Alert>}
 
-        <div className={styles.results}>
-          {isSearching && <div className={styles.hint}>Ищем...</div>}
-
-          {!isSearching && users.length === 0 && (
-            <div className={styles.hint}>
-              {hasQuery ? 'Ничего не найдено.' : 'Список пуст.'}
-            </div>
+          {isSearching && (
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              sx={{ mt: 1 }}
+            >
+              <CircularProgress size={18} />
+              <Typography variant="body2" color="text.secondary">
+                Ищем...
+              </Typography>
+            </Stack>
           )}
 
-          {users.map((u) => (
-            <label key={u.id} className={styles.userRow}>
-              <input
-                type="radio"
-                name="user"
-                value={u.id!}
-                checked={selectedUserId === u.id}
-                onChange={() => setSelectedUserId(u.id!)}
-              />
-              <span className={styles.userName}>{u.name ?? u.id}</span>
-            </label>
-          ))}
-        </div>
+          {!isSearching && users.length === 0 && (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ mt: 1 }}
+            >
+              {hasQuery ? 'Ничего не найдено.' : 'Список пуст.'}
+            </Typography>
+          )}
 
-        <div className={styles.footer}>
-          <button className={styles.secondaryBtn} onClick={onClose} type="button">
-            Отмена
-          </button>
-          <button
-            className={styles.primaryBtn}
-            onClick={handleCreate}
-            type="button"
-            disabled={!selectedUserId || isCreating}
-          >
-            {isCreating ? 'Создаём...' : 'Добавить'}
-          </button>
-        </div>
-      </div>
-    </div>
+          {users.length > 0 && (
+            <FormControl component="fieldset" sx={{ mt: 1 }}>
+              <FormLabel component="legend">
+                Выберите пользователя
+              </FormLabel>
+              <RadioGroup
+                name="user"
+                value={selectedUserId}
+                onChange={(_, value) => setSelectedUserId(value)}
+              >
+                {users.map(u => (
+                  <FormControlLabel
+                    key={u.id}
+                    value={u.id!}
+                    control={<Radio size="small" />}
+                    label={u.name ?? u.id}
+                  />
+                ))}
+              </RadioGroup>
+            </FormControl>
+          )}
+        </Stack>
+      </DialogContent>
+
+      <DialogActions>
+        <Button onClick={handleClose} color="inherit">
+          Отмена
+        </Button>
+        <Button
+          onClick={handleCreate}
+          variant="contained"
+          disabled={!selectedUserId || isCreating}
+        >
+          {isCreating ? 'Создаём...' : 'Добавить'}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };

@@ -1,10 +1,24 @@
 // src/pages/events/PurchasesPage.tsx
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useParams } from 'react-router-dom';
 import type { PurchaseShortEntry } from '../../api';
 import { purchaseService } from '../../services/purchase-service';
-import styles from './Purchase.module.css';
 import { AddPurchaseModal } from './AddPurchaseModal';
+
+import Container from '@mui/material/Container';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Alert from '@mui/material/Alert';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Stack from '@mui/material/Stack';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 type RouteParams = {
   id: string;
@@ -22,34 +36,29 @@ export const PurchasesPage: React.FC = () => {
 
   const initialPurchases = useMemo(
     () => state?.purchases ?? [],
-    [state]
+    [state],
   );
 
-  const [purchases, setPurchases] = useState<PurchaseShortEntry[]>(initialPurchases);
+  const [purchases, setPurchases] =
+    useState<PurchaseShortEntry[]>(initialPurchases);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // create modal
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-
-  // edit modal
-  const [editingPurchaseId, setEditingPurchaseId] = useState<string | null>(null);
+  const [editingPurchaseId, setEditingPurchaseId] =
+    useState<string | null>(null);
   const isEditOpen = Boolean(editingPurchaseId);
 
-  // Если страницу открыли без state — показываем подсказку (как у тебя было)
   const openedWithoutState = !state?.purchases && !state?.refresh;
 
-  // Заглушка: если позже появится эндпоинт "получить покупки ивента"
   const loadPurchases = async () => {
-    // TODO: заменить на реальный GET списка покупок
-    // Сейчас данные берутся из location.state
+    // TODO: подключить реальный GET списка покупок
   };
 
-  // Обновляем список при возврате с refresh (оставил как было)
   useEffect(() => {
     if (state?.refresh && eventId) {
       loadPurchases();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state?.refresh, eventId]);
 
   const handleAddPurchase = () => {
@@ -70,101 +79,189 @@ export const PurchasesPage: React.FC = () => {
 
     try {
       setLoading(true);
+      setError(null);
       await purchaseService.deletePurchaseById(eventId, purchaseId);
-      setPurchases((prev) => prev.filter((p) => p.id !== purchaseId));
+      setPurchases(prev => prev.filter(p => p.id !== purchaseId));
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Не удалось удалить покупку';
-      alert(msg);
+      const msg =
+        e instanceof Error ? e.message : 'Не удалось удалить покупку';
+      setError(msg);
     } finally {
       setLoading(false);
     }
   };
 
   const handleCreated = (created: PurchaseShortEntry) => {
-    // добавляем в начало списка
-    setPurchases((prev) => [created, ...prev]);
+    setPurchases(prev => [created, ...prev]);
   };
 
   const handleUpdated = (updated: PurchaseShortEntry) => {
-    // обновляем элемент по id (immutable update) [web:283]
-    setPurchases((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    setPurchases(prev => prev.map(p => (p.id === updated.id ? updated : p)));
   };
 
   if (!eventId) return null;
 
   return (
-    <div className={styles.page}>
-      <div className={styles.container}>
-        <div className={styles.backRow}>
-          <Link to={`/events/${eventId}`} className={styles.backLink}>
-            ← Назад к ивенту
-          </Link>
-        </div>
-
-        <div className={styles.narrow}>
-          <div className={styles.pageHeader}>
-            <h1 className={styles.sectionTitle}>Покупки</h1>
-
-            <button
-              type="button"
-              onClick={handleAddPurchase}
-              className={styles.addButton}
-              disabled={loading}
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box
+        sx={{
+          borderRadius: 3,
+          border: theme => `1px solid ${theme.palette.divider}`,
+          bgcolor: 'background.paper',
+          p: 3,
+        }}
+      >
+        {/* Шапка */}
+        <Stack
+          direction="row"
+          spacing={2}
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{ mb: 3 }}
+        >
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Button
+              sx={{ mb: 2, color:'text.primary' }}
+              component={RouterLink}
+              to={`/events/${eventId}`}
+              startIcon={<ArrowBackIcon />}
+              variant="text"
             >
-              + Добавить покупку
-            </button>
-          </div>
+              Назад к ивенту
+            </Button>
+          </Stack>
 
-          {purchases.length === 0 && !loading && (
-            <p className={styles.emptyText}>
-              Покупок пока нет. Добавьте первую.
-            </p>
-          )}
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleAddPurchase}
+            disabled={loading}
+          >
+            + Добавить покупку
+          </Button>
+        </Stack>
 
-          <ul className={styles.list}>
-            {purchases.map((p) => (
-              <li key={p.id} className={styles.listItem}>
-                <div className={styles.purchaseInfo}>
-                  <span>{p.name}</span>
-                  <span className={styles.purchaseStatus}>
-                    {p.isComplete ? 'Оплачено' : 'Не оплачено'}
-                  </span>
-                </div>
+        <Typography
+          variant="h5"
+          component="h1"
+          gutterBottom
+          color="text.primary"
+        >
+          Покупки
+        </Typography>
 
-                <div className={styles.purchaseActions}>
-                  <span className={styles.purchaseAmount}>{p.cost} ₽</span>
+        {error && (
+          <Box mb={2}>
+            <Alert severity="error">{error}</Alert>
+          </Box>
+        )}
 
-                  <button
-                    type="button"
-                    className={styles.editButton}
-                    onClick={() => handleEditPurchase(p)}
+        {purchases.length === 0 && !loading && (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Покупок пока нет. Добавьте первую.
+          </Typography>
+        )}
+
+        {/* Список покупок */}
+        <List
+          sx={{
+            mt: 2,
+            p: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1,
+          }}
+        >
+          {purchases.map(p => (
+            <ListItem
+              key={p.id}
+              sx={{
+                borderRadius: 2,
+                bgcolor: 'background.default',
+                boxShadow: 1,
+              }}
+            >
+              <Stack
+                direction="row"
+                spacing={2}
+                alignItems="center"
+                justifyContent="space-between"
+                sx={{ width: '100%' }}
+              >
+                {/* Левая часть: название + цена под ним */}
+                <ListItemText
+                  primary={
+                    <Stack spacing={0.25}>
+                      <Typography
+                        variant="subtitle1"
+                        component="span"
+                        color="text.primary"
+                        noWrap
+                      >
+                        {p.name}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        component="span"
+                        color="text.secondary"
+                      >
+                        {p.cost} ₽
+                      </Typography>
+                    </Stack>
+                  }
+                />
+
+                {/* Правая часть: статус + кнопки */}
+                <Stack
+                  direction="row"
+                  spacing={1.5}
+                  alignItems="center"
+                  sx={{ flexShrink: 0 }}
+                >
+                  <Chip
+                    label={p.isComplete ? 'Оплачено' : 'Не оплачено'}
+                    size="small"
+                    color={p.isComplete ? 'success' : 'warning'}
+                  />
+
+                  <IconButton
+                    aria-label="Редактировать"
                     title="Редактировать"
+                    onClick={() => handleEditPurchase(p)}
                     disabled={loading}
+                    color="primary"
+                    size="small"
                   >
-                    ✏️
-                  </button>
+                    <EditIcon fontSize="small" />
+                  </IconButton>
 
-                  <button
-                    type="button"
-                    className={styles.deleteButton}
-                    onClick={() => handleDeletePurchase(p.id)}
+                  <IconButton
+                    aria-label="Удалить"
                     title="Удалить"
+                    onClick={() => handleDeletePurchase(p.id)}
                     disabled={loading}
+                    color="error"
+                    size="small"
                   >
-                    🗑️
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
+              </Stack>
+            </ListItem>
+          ))}
+        </List>
 
-          {openedWithoutState && (
-            <p className={styles.hintText}>
-              Страница открыта без state — вернитесь на детальную ивента и зайдите повторно.
-            </p>
-          )}
-        </div>
-      </div>
+        {openedWithoutState && (
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ mt: 2 }}
+          >
+            Страница открыта без state — вернитесь на детальную ивента и
+            зайдите повторно.
+          </Typography>
+        )}
+      </Box>
 
       {/* Create */}
       <AddPurchaseModal
@@ -186,6 +283,6 @@ export const PurchasesPage: React.FC = () => {
           onUpdated={handleUpdated}
         />
       )}
-    </div>
+    </Container>
   );
 };

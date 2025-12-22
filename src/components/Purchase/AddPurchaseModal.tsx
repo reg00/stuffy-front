@@ -10,7 +10,22 @@ import type {
 } from '../../api';
 import { participantService } from '../../services/patricipant-service';
 import { purchaseService } from '../../services/purchase-service';
-import styles from './Purchase.module.css';
+
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert';
+import CircularProgress from '@mui/material/CircularProgress';
+import MenuItem from '@mui/material/MenuItem';
+import IconButton from '@mui/material/IconButton';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
 
 type Props =
   | {
@@ -47,50 +62,56 @@ function mapGetPurchaseToForm(p: GetPurchaseEntry): {
   buyerParticipantId: string;
   usages: UsageRow[];
 } {
-  const usages = (p.purchaseUsages as Array<UpsertPurchaseUsageEntry> | undefined) ?? [];
+  const usages =
+    (p.purchaseUsages as Array<UpsertPurchaseUsageEntry> | undefined) ?? [];
 
   return {
     name: p.name ?? '',
     cost: Number(p.cost ?? 0),
-    // важно для create-предзаполнения (если вдруг используешь initialPurchase и в create)
     buyerParticipantId: p.participant?.id ?? '',
     usages: usages
-      .filter((u) => u?.participantId)
-      .map((u) => ({ participantId: u.participantId, amount: u.amount ?? 1 })),
+      .filter(u => u?.participantId)
+      .map(u => ({
+        participantId: u.participantId,
+        amount: u.amount ?? 1,
+      })),
   };
 }
 
-export const AddPurchaseModal: React.FC<Props> = (props) => {
+export const AddPurchaseModal: React.FC<Props> = props => {
   const { eventId, isOpen, onClose, mode } = props;
 
-  // ===== form fields =====
+  // form fields
   const [name, setName] = useState('');
   const [cost, setCost] = useState<number>(0);
-  const [buyerParticipantId, setBuyerParticipantId] = useState<string>(''); // кто купил (только create)
+  const [buyerParticipantId, setBuyerParticipantId] = useState<string>('');
   const [usages, setUsages] = useState<UsageRow[]>([]);
 
-  // ===== purchase loading in edit =====
+  // edit loading
   const [purchaseLoading, setPurchaseLoading] = useState(false);
 
-  // ===== participants infinite list (нужен только для create и usages) =====
+  // participants infinite list
   const [participants, setParticipants] = useState<ParticipantShortEntry[]>([]);
   const [participantsLoading, setParticipantsLoading] = useState(false);
-  const [participantsError, setParticipantsError] = useState<string | null>(null);
+  const [participantsError, setParticipantsError] = useState<string | null>(
+    null,
+  );
 
   const [offset, setOffset] = useState(0);
   const [totalPages, setTotalPages] = useState<number | null>(null);
 
-  const pageIndex = useMemo(() => Math.floor(offset / PAGE_LIMIT), [offset]);
+  const pageIndex = useMemo(
+    () => Math.floor(offset / PAGE_LIMIT),
+    [offset],
+  );
   const hasMore = useMemo(() => {
     if (totalPages === null) return true;
     return pageIndex < totalPages;
   }, [pageIndex, totalPages]);
 
-  // защита от дублей
   const loadedOffsetsRef = useRef<Set<number>>(new Set());
   const loadingOffsetsRef = useRef<Set<number>>(new Set());
 
-  // sentinel/observer
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
@@ -99,7 +120,6 @@ export const AddPurchaseModal: React.FC<Props> = (props) => {
   const [error, setError] = useState<string | null>(null);
 
   const canSubmit = useMemo(() => {
-    // create: нужен buyerParticipantId
     if (mode === 'create') {
       return (
         name.trim().length > 0 &&
@@ -110,7 +130,6 @@ export const AddPurchaseModal: React.FC<Props> = (props) => {
       );
     }
 
-    // edit: participantId не редактируем и не валидируем
     return (
       name.trim().length > 0 &&
       Number.isFinite(cost) &&
@@ -149,18 +168,6 @@ export const AddPurchaseModal: React.FC<Props> = (props) => {
     observerRef.current = null;
   };
 
-  // Esc закрывает модалку
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isOpen, onClose]);
-
   const loadParticipantsPage = async (pageOffset: number) => {
     if (!isOpen) return;
     if (!eventId) return;
@@ -173,7 +180,7 @@ export const AddPurchaseModal: React.FC<Props> = (props) => {
       if (currentPage >= totalPages) return;
     }
 
-    const wasOpen = isOpen; // защита от race condition
+    const wasOpen = isOpen;
 
     try {
       loadingOffsetsRef.current.add(pageOffset);
@@ -184,10 +191,10 @@ export const AddPurchaseModal: React.FC<Props> = (props) => {
         eventId,
         pageOffset,
         PAGE_LIMIT,
-        undefined
+        undefined,
       );
 
-      if (!wasOpen) return; // модалка закрылась во время запроса
+      if (!wasOpen) return;
 
       const data = (resp.data ?? []).filter(Boolean);
       const tp = resp.totalPages ?? 1;
@@ -195,21 +202,23 @@ export const AddPurchaseModal: React.FC<Props> = (props) => {
       loadedOffsetsRef.current.add(pageOffset);
 
       setTotalPages(tp);
-      setParticipants((prev) => {
-        // убираем дубли при merge
+      setParticipants(prev => {
         const existingIds = new Set(prev.map(p => p.id));
         const newParticipants = data.filter(p => !existingIds.has(p.id));
         return [...prev, ...newParticipants];
       });
-      setOffset((prevNextOffset) => Math.max(prevNextOffset, pageOffset + PAGE_LIMIT));
+      setOffset(prevNextOffset =>
+        Math.max(prevNextOffset, pageOffset + PAGE_LIMIT),
+      );
 
-      // авто-выбор покупателя только в create
       if (mode === 'create' && pageOffset === 0 && data.length > 0) {
-        setBuyerParticipantId((prev) => prev || data[0].id);
+        setBuyerParticipantId(prev => prev || data[0].id);
       }
     } catch (e: unknown) {
       if (wasOpen) {
-        setParticipantsError(getErrorMessage(e, 'Не удалось загрузить участников.'));
+        setParticipantsError(
+          getErrorMessage(e, 'Не удалось загрузить участников.'),
+        );
       }
     } finally {
       loadingOffsetsRef.current.delete(pageOffset);
@@ -217,18 +226,15 @@ export const AddPurchaseModal: React.FC<Props> = (props) => {
     }
   };
 
-  // ✅ При открытии: сброс + первая страница участников (ТОЛЬКО ОДИН РАЗ)
+  // open: reset + first participants page
   useEffect(() => {
     if (!isOpen) return;
 
     hardResetAll();
-
-    // Загружаем первую страницу ТОЛЬКО при открытии
-    // (ни для create, ни для edit не важно — usages всегда нужны)
     loadParticipantsPage(0);
-  }, [isOpen, eventId]); // ✅ убрали mode из deps
+  }, [isOpen, eventId]);
 
-  // Observer (infinite scroll)
+  // infinite scroll observer
   useEffect(() => {
     if (!isOpen) return;
     if (!sentinelRef.current) return;
@@ -239,7 +245,7 @@ export const AddPurchaseModal: React.FC<Props> = (props) => {
     const el = sentinelRef.current;
 
     const observer = new IntersectionObserver(
-      (entries) => {
+      entries => {
         const first = entries[0];
         if (!first?.isIntersecting) return;
         if (!hasMore) return;
@@ -249,7 +255,7 @@ export const AddPurchaseModal: React.FC<Props> = (props) => {
         root: null,
         threshold: 0,
         rootMargin: '200px 0px 200px 0px',
-      }
+      },
     );
 
     observer.observe(el);
@@ -259,9 +265,9 @@ export const AddPurchaseModal: React.FC<Props> = (props) => {
       observer.disconnect();
       observerRef.current = null;
     };
-  }, [isOpen, offset, hasMore, eventId]); // ✅ добавили eventId для стабильности
+  }, [isOpen, offset, hasMore, eventId]);
 
-  // ✅ Предзаполнение в edit-режиме (НЕ трогаем participants)
+  // edit prefill
   useEffect(() => {
     if (!isOpen) return;
     if (mode !== 'edit') return;
@@ -277,7 +283,10 @@ export const AddPurchaseModal: React.FC<Props> = (props) => {
 
         if (!purchase) {
           const purchaseId = props.purchaseId as string;
-          purchase = await purchaseService.getPurchaseById(eventId, purchaseId);
+          purchase = await purchaseService.getPurchaseById(
+            eventId,
+            purchaseId,
+          );
         }
 
         if (cancelled || !purchase) return;
@@ -285,14 +294,16 @@ export const AddPurchaseModal: React.FC<Props> = (props) => {
         const mapped = mapGetPurchaseToForm(purchase);
         setName(mapped.name);
         setCost(mapped.cost);
-
-        // ВАЖНО: buyerParticipantId предзаполняем, но UI не показываем и в payload edit не отправляем
         setBuyerParticipantId(mapped.buyerParticipantId);
-
         setUsages(mapped.usages);
       } catch (e: unknown) {
         if (cancelled) return;
-        setError(getErrorMessage(e, 'Не удалось загрузить покупку для редактирования.'));
+        setError(
+          getErrorMessage(
+            e,
+            'Не удалось загрузить покупку для редактирования.',
+          ),
+        );
       } finally {
         if (!cancelled) setPurchaseLoading(false);
       }
@@ -301,19 +312,21 @@ export const AddPurchaseModal: React.FC<Props> = (props) => {
     return () => {
       cancelled = true;
     };
-  }, [isOpen, mode, eventId, props.initialPurchase, props.purchaseId]); // ✅ точные deps
+  }, [isOpen, mode, eventId, props.initialPurchase, props.purchaseId]);
 
   const addUsageRow = () => {
     const firstParticipantId = participants[0]?.id ?? '';
-    setUsages((prev) => [...prev, { participantId: firstParticipantId, amount: 1 }]);
+    setUsages(prev => [...prev, { participantId: firstParticipantId, amount: 1 }]);
   };
 
   const updateUsageRow = (index: number, patch: Partial<UsageRow>) => {
-    setUsages((prev) => prev.map((r, i) => (i === index ? { ...r, ...patch } : r)));
+    setUsages(prev =>
+      prev.map((r, i) => (i === index ? { ...r, ...patch } : r)),
+    );
   };
 
   const removeUsageRow = (index: number) => {
-    setUsages((prev) => prev.filter((_, i) => i !== index));
+    setUsages(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSave = async () => {
@@ -324,8 +337,8 @@ export const AddPurchaseModal: React.FC<Props> = (props) => {
       setError(null);
 
       const purchaseUsages: UpsertPurchaseUsageEntry[] = usages
-        .filter((u) => u.participantId && u.amount > 0)
-        .map((u) => ({ participantId: u.participantId, amount: u.amount }));
+        .filter(u => u.participantId && u.amount > 0)
+        .map(u => ({ participantId: u.participantId, amount: u.amount }));
 
       if (mode === 'create') {
         const payload: AddPurchaseEntry = {
@@ -335,25 +348,36 @@ export const AddPurchaseModal: React.FC<Props> = (props) => {
           purchaseUsages,
         };
 
-        const created = await purchaseService.createPurchase(eventId, payload);
-        if (!created?.id) throw new Error('Пустой ответ от API при создании покупки (нет id).');
+        const created = await purchaseService.createPurchase(
+          eventId,
+          payload,
+        );
+        if (!created?.id)
+          throw new Error(
+            'Пустой ответ от API при создании покупки (нет id).',
+          );
 
         props.onCreated(created);
         onClose();
         return;
       }
 
-      // edit (participantId НЕ отправляем)
       const purchaseId = props.purchaseId;
-
       const payload: UpdatePurchaseEntry = {
         name: name.trim(),
         cost,
         purchaseUsages,
       };
 
-      const updated = await purchaseService.editPurchaseById(eventId, purchaseId, payload);
-      if (!updated?.id) throw new Error('Пустой ответ от API при обновлении покупки (нет id).');
+      const updated = await purchaseService.editPurchaseById(
+        eventId,
+        purchaseId,
+        payload,
+      );
+      if (!updated?.id)
+        throw new Error(
+          'Пустой ответ от API при обновлении покупки (нет id).',
+        );
 
       props.onUpdated(updated);
       onClose();
@@ -361,183 +385,224 @@ export const AddPurchaseModal: React.FC<Props> = (props) => {
       setError(
         getErrorMessage(
           e,
-          mode === 'edit' ? 'Не удалось обновить покупку.' : 'Не удалось добавить покупку.'
-        )
+          mode === 'edit'
+            ? 'Не удалось обновить покупку.'
+            : 'Не удалось добавить покупку.',
+        ),
       );
     } finally {
       setIsSaving(false);
     }
   };
 
-  if (!isOpen) return null;
+  const handleClose = () => {
+    onClose();
+  };
 
   return (
-    <div className={styles.backdrop} onMouseDown={onClose} role="presentation">
-      <div
-        className={styles.modal}
-        onMouseDown={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label={mode === 'edit' ? 'Редактировать покупку' : 'Добавить покупку'}
-      >
-        <div className={styles.header}>
-          <h2 className={styles.title}>
-            {mode === 'edit' ? 'Изменить покупку' : 'Добавить покупку'}
-          </h2>
-          <button className={styles.closeBtn} onClick={onClose} type="button">
-            ✕
-          </button>
-        </div>
+    <Dialog
+      open={isOpen}
+      onClose={handleClose}
+      maxWidth="sm"
+      fullWidth
+      aria-labelledby="add-purchase-title"
+    >
+      <DialogTitle id="add-purchase-title">
+        {mode === 'edit' ? 'Изменить покупку' : 'Добавить покупку'}
+      </DialogTitle>
 
-        <div className={styles.modalBody}>
-          {error && <div className={styles.error}>{error}</div>}
+      <DialogContent dividers>
+        <Stack spacing={2}>
+          {error && <Alert severity="error">{error}</Alert>}
 
           {purchaseLoading && mode === 'edit' && (
-            <div className={styles.hint}>Загружаем данные покупки...</div>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <CircularProgress size={18} />
+              <Typography variant="body2" color="text.secondary">
+                Загружаем данные покупки...
+              </Typography>
+            </Stack>
           )}
 
-          <label className={styles.label}>
-            Название
-            <input
-              className={styles.input}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Например: Пицца"
-              autoFocus
-              disabled={purchaseLoading}
-            />
-          </label>
+          <TextField
+            label="Название"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder="Например: Пицца"
+            autoFocus
+            fullWidth
+            size="small"
+            disabled={purchaseLoading}
+          />
 
-          <label className={styles.label}>
-            Цена (₽)
-            <input
-              className={styles.input}
-              type="number"
-              min={0}
-              step="1"
-              value={Number.isFinite(cost) ? cost : 0}
-              onChange={(e) => setCost(Number(e.target.value))}
-              disabled={purchaseLoading}
-            />
-          </label>
+          <TextField
+            label="Цена (₽)"
+            type="number"
+            inputProps={{ min: 0, step: 1 }}
+            value={Number.isFinite(cost) ? cost : 0}
+            onChange={e => setCost(Number(e.target.value))}
+            fullWidth
+            size="small"
+            disabled={purchaseLoading}
+          />
 
-          {/* ВАЖНО: в edit не показываем participantId */}
           {mode === 'create' && (
-            <div className={styles.label}>
-              Кто купил
-              <div className={styles.participantsBox}>
-                {participants.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    className={
-                      buyerParticipantId === p.id
-                        ? styles.participantRowActive
-                        : styles.participantRow
-                    }
-                    onClick={() => setBuyerParticipantId(p.id)}
-                    disabled={purchaseLoading}
-                  >
-                    <span className={styles.participantRowName}>
-                      {p.name ?? 'Без имени'}
-                    </span>
-                    {buyerParticipantId === p.id && <span>✓</span>}
-                  </button>
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                Кто купил
+              </Typography>
+              <TextField
+                select
+                fullWidth
+                size="small"
+                value={buyerParticipantId}
+                onChange={e => setBuyerParticipantId(e.target.value)}
+                disabled={purchaseLoading || participants.length === 0}
+              >
+                {participants.map(p => (
+                  <MenuItem key={p.id} value={p.id}>
+                    {p.name ?? 'Без имени'}
+                  </MenuItem>
                 ))}
+              </TextField>
 
-                {participantsError && (
-                  <div className={styles.errorInline}>{participantsError}</div>
+              {participantsError && (
+                <Box mt={1}>
+                  <Alert severity="error" variant="outlined">
+                    {participantsError}
+                  </Alert>
+                </Box>
+              )}
+
+              <Box ref={sentinelRef} sx={{ height: 1 }} />
+
+              {participantsLoading && (
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                  sx={{ mt: 1 }}
+                >
+                  <CircularProgress size={18} />
+                  <Typography variant="body2" color="text.secondary">
+                    Загружаем участников...
+                  </Typography>
+                </Stack>
+              )}
+
+              {!participantsLoading &&
+                participants.length === 0 &&
+                !participantsError && (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mt: 1 }}
+                  >
+                    Участников нет.
+                  </Typography>
                 )}
-
-                <div ref={sentinelRef} />
-
-                {participantsLoading && (
-                  <div className={styles.hint}>Загружаем участников...</div>
-                )}
-
-                {!participantsLoading && participants.length === 0 && !participantsError && (
-                  <div className={styles.hint}>Участников нет.</div>
-                )}
-
-                {!participantsLoading && participants.length > 0 && !hasMore && (
-                  <div className={styles.hint}>Больше участников нет.</div>
-                )}
-              </div>
-            </div>
+            </Box>
           )}
 
-          <div className={styles.usageHeader}>
-            <div className={styles.usageTitle}>Использования (опционально)</div>
-            <button
-              type="button"
-              className={styles.secondaryBtn}
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ mt: 1 }}
+          >
+            <Typography variant="subtitle2">
+              Использования (опционально)
+            </Typography>
+            <Button
+              startIcon={<AddIcon />}
+              size="small"
+              variant="outlined"
               onClick={addUsageRow}
               disabled={participants.length === 0 || purchaseLoading}
             >
-              + Добавить
-            </button>
-          </div>
+              Добавить
+            </Button>
+          </Stack>
 
           {usages.length === 0 && (
-            <div className={styles.hint}>Можно не заполнять — список пуст.</div>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ mt: 1 }}
+            >
+              Можно не заполнять — список пуст.
+            </Typography>
           )}
 
           {usages.map((row, idx) => (
-            <div key={`${row.participantId}-${idx}`} className={styles.usageRow}>
-              <select
-                className={styles.select}
+            <Stack
+              key={`${row.participantId}-${idx}`}
+              direction="row"
+              spacing={1}
+              alignItems="center"
+            >
+              <TextField
+                select
+                size="small"
+                fullWidth
                 value={row.participantId}
-                onChange={(e) => updateUsageRow(idx, { participantId: e.target.value })}
+                onChange={e =>
+                  updateUsageRow(idx, { participantId: e.target.value })
+                }
                 disabled={purchaseLoading}
+                label="Участник"
               >
-                <option value="" disabled>
+                <MenuItem value="" disabled>
                   Выберите участника
-                </option>
-                {participants.map((p) => (
-                  <option key={p.id} value={p.id}>
+                </MenuItem>
+                {participants.map(p => (
+                  <MenuItem key={p.id} value={p.id}>
                     {p.name ?? 'Без имени'}
-                  </option>
+                  </MenuItem>
                 ))}
-              </select>
+              </TextField>
 
-              <input
-                className={styles.input}
+              <TextField
+                size="small"
                 type="number"
-                min={1}
-                step="1"
+                label="Кол-во"
+                inputProps={{ min: 1, step: 1 }}
                 value={row.amount}
-                onChange={(e) => updateUsageRow(idx, { amount: Number(e.target.value) })}
+                onChange={e =>
+                  updateUsageRow(idx, { amount: Number(e.target.value) })
+                }
+                sx={{ width: 100 }}
                 disabled={purchaseLoading}
               />
 
-              <button
-                type="button"
-                className={styles.deleteButton}
+              <IconButton
+                color="error"
                 onClick={() => removeUsageRow(idx)}
-                title="Удалить строку"
                 disabled={purchaseLoading}
               >
-                🗑️
-              </button>
-            </div>
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Stack>
           ))}
-        </div>
+        </Stack>
+      </DialogContent>
 
-        <div className={styles.footer}>
-          <button className={styles.secondaryBtn} onClick={onClose} type="button">
-            Отмена
-          </button>
-
-          <button
-            className={styles.primaryBtn}
-            onClick={handleSave}
-            type="button"
-            disabled={!canSubmit || isSaving || participantsLoading}
-          >
-            {isSaving ? 'Сохраняем...' : mode === 'edit' ? 'Сохранить' : 'Создать'}
-          </button>
-        </div>
-      </div>
-    </div>
+      <DialogActions>
+        <Button onClick={handleClose} color="inherit">
+          Отмена
+        </Button>
+        <Button
+          onClick={handleSave}
+          variant="contained"
+          disabled={!canSubmit || isSaving || participantsLoading}
+        >
+          {isSaving
+            ? 'Сохраняем...'
+            : mode === 'edit'
+            ? 'Сохранить'
+            : 'Создать'}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };

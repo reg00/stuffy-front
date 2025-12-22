@@ -1,42 +1,54 @@
+// src/pages/NotFoundPage.tsx
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
+
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
 
 export const NotFoundPage: React.FC = () => {
   return (
-    <div
-      style={{
+    <Box
+      sx={{
         minHeight: '100vh',
-        padding: '40px 24px',
+        bgcolor: 'background.default',
         display: 'flex',
-        justifyContent: 'center',
         alignItems: 'center',
-        background: 'var(--color-bg)',
+        justifyContent: 'center',
+        px: 2,
       }}
     >
-      <div
-        style={{
-          textAlign: 'center',
+      <Paper
+        elevation={3}
+        sx={{
           maxWidth: 480,
+          width: '100%',
+          p: 4,
+          textAlign: 'center',
+          bgcolor: 'background.paper',
         }}
       >
-        <h1 style={{ fontSize: 32, margin: '0 0 8px' }}>404</h1>
-        <p style={{ margin: '0 0 16px', fontSize: 16 }}>
-          Страница не найдена.
-        </p>
-        <Link
-          to="/events"
-          style={{
-            textDecoration: 'none',
-            color: 'white',
-            background: '#4f46e5',
-            padding: '8px 16px',
-            borderRadius: 8,
-            fontSize: 14,
-          }}
-        >
-          На главную
-        </Link>
-      </div>
-    </div>
+        <Stack spacing={2} alignItems="center">
+          <Typography variant="h3" component="h1" color="text.primary">
+            404
+          </Typography>
+
+          <Typography variant="body1" color="text.secondary">
+            Страница не найдена.
+          </Typography>
+
+          <Button
+            variant="contained"
+            color="primary"
+            component={RouterLink}
+            to="/events"
+          >
+            На главную
+          </Button>
+        </Stack>
+      </Paper>
+    </Box>
   );
 };
