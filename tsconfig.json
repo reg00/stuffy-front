@@ -17,6 +17,7 @@
     "resolvePackageJsonExports": true,
     "resolvePackageJsonImports": true,
     "baseUrl": ".",
+    "types": ["vite/client"],
     "paths": {
       "@/*": ["src/*"],
       "@api/*": ["src/api/*"],

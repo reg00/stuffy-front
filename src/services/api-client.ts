@@ -1,7 +1,6 @@
 import { client } from '../api/client.gen';
 
-const API_URL = 'http://46.191.173.6:7654';
-//const API_URL = 'https://localhost:7654';
+const API_URL = import.meta.env.VITE_API_TARGET as string;
 
 export class AuthenticatedApiClient {
   constructor(baseUrl: string = API_URL) {
