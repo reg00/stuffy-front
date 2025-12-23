@@ -3,6 +3,7 @@ import {
   getApiV1Events,
   getApiV1EventsByEventId,
   patchApiV1EventsByEventId,
+  patchApiV1EventsByEventIdPhoto,
   postApiV1Events,
 } from '../api/sdk.gen';
 import { apiClient } from './api-client';
@@ -55,6 +56,19 @@ class EventsService {
     if(response.data)
       return response.data as EventShortEntry;
         
+    throw response.error
+  }
+
+  async editEventAvatar(eventId: string, file: File) {
+    const response = await patchApiV1EventsByEventIdPhoto({
+      path: {eventId},
+      body: { file },
+      client: apiClient.getClient(),
+    });
+    
+    if (response.data)
+      return response.data as EventShortEntry;
+    
     throw response.error
   }
 }
