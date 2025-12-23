@@ -22,9 +22,8 @@ import { useTheme } from '@mui/material/styles';
 import SaveIcon from '@mui/icons-material/Save';
 
 interface UserFormData {
-  // username и email есть в стейте, но НЕ редактируются через форму
-  username: string;
-  email: string;
+  username: string; // не редактируем, но храним
+  email: string;    // не редактируем, но храним
   firstName: string;
   middleName: string;
   lastName: string;
@@ -44,7 +43,8 @@ export const UserSettingsPage: React.FC = () => {
     avatarFile: null,
   });
   const [avatarUploading, setAvatarUploading] = useState(false);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null); // blob для локального превью
+  const [avatarVersion, setAvatarVersion] = useState(0); // cache-buster для imageUri
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -70,7 +70,10 @@ export const UserSettingsPage: React.FC = () => {
         phone: user.phone || '',
         avatarFile: null,
       });
-      setAvatarPreview(user.imageUri || null);
+
+      // при приходе нового user обнуляем локальное превью
+      setAvatarPreview(null);
+      // imageUri не меняется, поэтому полагаемся на avatarVersion
     }
   }, [user]);
 
@@ -87,7 +90,7 @@ export const UserSettingsPage: React.FC = () => {
     const file = e.target.files?.[0];
     if (file) {
       setFormData(prev => ({ ...prev, avatarFile: file }));
-      setAvatarPreview(URL.createObjectURL(file));
+      setAvatarPreview(URL.createObjectURL(file)); // показываем выбранный файл до сохранения
     }
   };
 
@@ -98,7 +101,11 @@ export const UserSettingsPage: React.FC = () => {
     try {
       await authService.editAvatar(formData.avatarFile);
       await refreshUser();
+
       setFormData(prev => ({ ...prev, avatarFile: null }));
+      setAvatarPreview(null);         // переходим обратно на src из imageUri
+      setAvatarVersion(v => v + 1);   // ломаем кеш браузера
+
       setSnackbar({
         open: true,
         message: 'Аватар успешно обновлён',
@@ -121,7 +128,6 @@ export const UserSettingsPage: React.FC = () => {
     if (!user) return;
 
     try {
-      // username берём из user / formData, email вообще не трогаем (в UpdateModel его нет)
       const profileData: UpdateModel = {
         username: user.name || '',
         firstName: formData.firstName || undefined,
@@ -158,6 +164,13 @@ export const UserSettingsPage: React.FC = () => {
       </Container>
     );
   }
+
+  // src для аватара:
+  // 1) если есть локальный blob (avatarPreview) — показываем его
+  // 2) иначе, если есть imageUri — добавляем ?v=avatarVersion для обхода кеша
+  const avatarSrc =
+    avatarPreview ??
+    (user.imageUri ? `${user.imageUri}?v=${avatarVersion}` : undefined);
 
   return (
     <Container maxWidth="md">
@@ -214,7 +227,7 @@ export const UserSettingsPage: React.FC = () => {
             }}
           >
             <Avatar
-              src={avatarPreview || undefined}
+              src={avatarSrc}
               sx={{
                 width: 140,
                 height: 140,
@@ -225,7 +238,7 @@ export const UserSettingsPage: React.FC = () => {
               }}
               onClick={handleAvatarClick}
             >
-              {!avatarPreview &&
+              {!avatarSrc &&
                 (user.firstName?.[0] ||
                   user.name?.[0] ||
                   user.email?.[0] ||
