@@ -24,6 +24,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Stack from '@mui/material/Stack';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { AddEventModal } from './AddEventModal';
 
 const LIMIT = 10;
@@ -45,6 +46,7 @@ export const EventsPage: React.FC = () => {
   const [editingEvent, setEditingEvent] = useState<EventShortEntry | null>(
     null,
   );
+  const [deleteLoadingId, setDeleteLoadingId] = useState<string | null>(null);
 
   const loadEvents = useCallback(async () => {
     if (loadingRef.current || !hasMoreRef.current) return;
@@ -120,6 +122,23 @@ export const EventsPage: React.FC = () => {
 
   const handleUpdated = (updated: EventShortEntry) => {
     setEvents(prev => prev.map(e => (e.id === updated.id ? updated : e)));
+  };
+
+  const handleDelete = async (eventId: string) => {
+    if (!window.confirm('Удалить это событие?')) return;
+
+    try {
+      setDeleteLoadingId(eventId);
+      await eventsService.deleteApiV1EventsByEventId(eventId);
+      // удаляем из списка
+      setEvents(prev => prev.filter(e => e.id !== eventId));
+    } catch (e: unknown) {
+      const msg =
+        e instanceof Error ? e.message : 'Не удалось удалить событие';
+      setError(msg);
+    } finally {
+      setDeleteLoadingId(null);
+    }
   };
 
   return (
@@ -201,6 +220,21 @@ export const EventsPage: React.FC = () => {
                   color="primary"
                 >
                   <EditIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  edge="end"
+                  aria-label="Удалить"
+                  title="Удалить"
+                  onClick={() => handleDelete(event.id)}
+                  size="small"
+                  color="error"
+                  disabled={deleteLoadingId === event.id}
+                >
+                  {deleteLoadingId === event.id ? (
+                    <CircularProgress size={16} />
+                  ) : (
+                    <DeleteIcon fontSize="small" />
+                  )}
                 </IconButton>
               </ListItemSecondaryAction>
             }

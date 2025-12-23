@@ -1,5 +1,6 @@
 // src/services/events-service.ts
 import {
+  deleteApiV1EventsByEventId,
   getApiV1Events,
   getApiV1EventsByEventId,
   patchApiV1EventsByEventId,
@@ -12,7 +13,7 @@ import type { EventShortEntryResponse, EventShortEntry, GetEventEntry, AddEventE
 class EventsService {
   async getEvents(offset: number = 0, limit: number = 20): Promise<EventShortEntry[]> {
     const response = await getApiV1Events({
-      query: { offset, limit },
+      query: { offset, limit, isActive: true },
       client: apiClient.getClient(),
     });
 
@@ -70,6 +71,16 @@ class EventsService {
       return response.data as EventShortEntry;
     
     throw response.error
+  }
+
+  async deleteApiV1EventsByEventId(eventId: string) {
+    const response = await deleteApiV1EventsByEventId({
+      path: { eventId },
+      client: apiClient.getClient(),
+    });
+
+    if(response.error)
+      throw response.error
   }
 }
 
