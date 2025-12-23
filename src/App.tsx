@@ -11,6 +11,7 @@ import { NotFoundPage } from './components/Errors/NotFoundPage';
 import { useAuthStore } from './store/auth-store';
 import { ConfirmEmail } from './components/Auth/ConfirmEmail';
 import { EmailConfirmed } from './components/Auth/EmailConfirmed';
+import { UserSettingsPage } from './components/User/UserSettingsPage';
 
 function App() {
   const { isAuthenticated } = useAuthStore();
@@ -25,6 +26,15 @@ function App() {
         <Route path="/email-confirm" element={<EmailConfirmed />} />
 
         {/* с layout */}
+        <Route
+          path="/account"
+          element={
+            <ProtectedRoute>
+                <UserSettingsPage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/events"
           element={

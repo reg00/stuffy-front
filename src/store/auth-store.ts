@@ -26,12 +26,13 @@ interface AuthState {
   setError: (error: string | null) => void;
   clearError: () => void;
   setLoading: (loading: boolean) => void;
+  refreshUser: () => Promise<void>; // ✅ Добавлен метод
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string, skipAutoLogin?: boolean) => Promise<void>;
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => {
+export const useAuthStore = create<AuthState>((set, get) => {
   const initialUser = loadUserFromStorage();
   const hasToken = authService.isAuthenticated();
 
@@ -59,7 +60,23 @@ export const useAuthStore = create<AuthState>((set) => {
 
     setLoading: (loading) => set({ isLoading: loading }),
 
-    // login: получаем только token, user берём ИЗ ОТВЕТА login, а не делаем отдельный account
+    // ✅ Новый метод refreshUser
+    refreshUser: async () => {
+      const { setUser, setError, setLoading } = get();
+      
+      setLoading(true);
+      try {
+        const user = await authService.getAccount();
+        setUser(user ?? null);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Ошибка обновления профиля';
+        setError(errorMessage);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+
     login: async (username, password) => {
       set({ isLoading: true, error: null });
       try {
@@ -75,8 +92,7 @@ export const useAuthStore = create<AuthState>((set) => {
           isLoading: false,
         });
       } catch (error: unknown) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Ошибка при логине';
+        const errorMessage = error instanceof Error ? error.message : 'Ошибка при логине';
         set({
           error: errorMessage,
           isLoading: false,
@@ -85,14 +101,12 @@ export const useAuthStore = create<AuthState>((set) => {
       }
     },
 
-    // register: после регистрации сразу логинимся, если НЕ указан skipAutoLogin
     register: async (username, email, password, skipAutoLogin = false) => {
       set({ isLoading: true, error: null });
       try {
         await authService.register(username, email, password);
 
         if (!skipAutoLogin) {
-          // ✅ Обычная логика автологина (только для других случаев)
           const token = await authService.login(username, password);
           apiClient.setToken(token!);
 
@@ -105,12 +119,10 @@ export const useAuthStore = create<AuthState>((set) => {
             isLoading: false,
           });
         } else {
-          // ✅ Для регистрации с подтверждением email - НЕ логинимся
           set({ isLoading: false });
         }
       } catch (error: unknown) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Ошибка при регистрации';
+        const errorMessage = error instanceof Error ? error.message : 'Ошибка при регистрации';
         set({
           error: errorMessage,
           isLoading: false,

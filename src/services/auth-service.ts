@@ -1,10 +1,12 @@
-import { UserShortEntry } from '../api';
+import { GetUserEntry, UpdateModel, UserShortEntry } from '../api';
 import {
   postApiV1AuthRegister,
   postApiV1AuthLogin,
   getApiV1AuthAccount,
   getApiV1AuthUsers,
   getApiV1AuthEmailConfirm,
+  patchApiV1AuthEdit,
+  postApiV1AuthAvatar,
 } from '../api/sdk.gen';
 import { apiClient } from './api-client';
 
@@ -57,6 +59,28 @@ class AuthService {
           return response.data as UserShortEntry[];
             
     throw response.error
+  }
+
+  async editUser(userData: UpdateModel) {
+    const response = await patchApiV1AuthEdit({
+      body: userData,
+      client: apiClient.getClient(),
+    });
+
+    if(response.data)
+      return response.data as GetUserEntry;
+            
+    throw response.error
+  }
+
+  async editAvatar(file: File) {
+    const response = await postApiV1AuthAvatar({
+      body: { file },
+      client: apiClient.getClient(),
+    });
+
+    if (response.error)
+      throw response.error
   }
 
   async confirmEmail(login: string, code: string) {

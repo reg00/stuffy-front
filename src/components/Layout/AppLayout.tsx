@@ -1,9 +1,8 @@
-// src/components/Layout/AppLayout.tsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/auth-store';
-import { useTheme as useCustomTheme } from '../../hooks/useTheme'; // твой хук: { theme: 'light' | 'dark', toggleTheme }
-import { themeLight, themeDark } from '../../theme'; // createTheme(...) для light/dark
+import { useTheme as useCustomTheme } from '../../hooks/useTheme';
+import { themeLight, themeDark } from '../../theme';
 
 import { ThemeProvider } from '@mui/material/styles';
 import AppBar from '@mui/material/AppBar';
@@ -35,11 +34,14 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     navigate('/events');
   };
 
+  const goAccount = () => {
+    navigate('/account');
+  };
+
   const activeTheme = customTheme === 'dark' ? themeDark : themeLight;
 
   return (
     <ThemeProvider theme={activeTheme}>
-      {/* Корневой контейнер — на весь экран, без рамок */}
       <Box
         sx={{
           minHeight: '100vh',
@@ -49,10 +51,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           padding: 0,
         }}
       >
-        {/* Верхний бар */}
         <AppBar position="static" color="primary" enableColorOnDark>
           <Toolbar sx={{ justifyContent: 'space-between' }}>
-            {/* Левая часть: логотип */}
+            {/* Логотип / название */}
             <Stack direction="row" spacing={1} alignItems="center">
               <Typography
                 variant="h6"
@@ -70,7 +71,12 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
             {/* Правая часть: настройки, тема, пользователь */}
             <Stack direction="row" spacing={2} alignItems="center">
-              <IconButton color="inherit" size="small">
+              <IconButton
+                color="inherit"
+                size="small"
+                onClick={goAccount}
+                aria-label="Открыть настройки аккаунта"
+              >
                 <SettingsIcon fontSize="small" />
               </IconButton>
 
@@ -78,7 +84,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                 onClick={toggleTheme}
                 color="inherit"
                 size="small"
-                aria-label="Toggle theme"
+                aria-label="Переключить тему"
               >
                 {customTheme === 'dark' ? (
                   <Brightness7Icon fontSize="small" />
