@@ -73,7 +73,7 @@ class EventsService {
     throw response.error
   }
 
-  async deleteApiV1EventsByEventId(eventId: string) {
+  async deleteEvent(eventId: string) {
     const response = await deleteApiV1EventsByEventId({
       path: { eventId },
       client: apiClient.getClient(),

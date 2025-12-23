@@ -129,7 +129,7 @@ export const EventsPage: React.FC = () => {
 
     try {
       setDeleteLoadingId(eventId);
-      await eventsService.deleteApiV1EventsByEventId(eventId);
+      await eventsService.deleteEvent(eventId);
       // удаляем из списка
       setEvents(prev => prev.filter(e => e.id !== eventId));
     } catch (e: unknown) {
