@@ -41,6 +41,12 @@ export const EventDetailsPage: React.FC = () => {
   // состояние для смены обложки
   const [coverUploading, setCoverUploading] = useState(false);
   const [coverVersion, setCoverVersion] = useState(0); // cache-buster
+
+  // состояние для кнопок действий
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+  const [isCompleteLoading, setIsCompleteLoading] = useState(false);
+  const [isReopenLoading, setIsReopenLoading] = useState(false);
+
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -79,10 +85,6 @@ export const EventDetailsPage: React.FC = () => {
     e.currentTarget.src = FALLBACK_IMAGE;
   };
 
-  const handleFinishEvent = () => {
-    alert('Завершение ивента (заглушка)');
-  };
-
   const handleCoverClick = () => {
     fileInputRef.current?.click();
   };
@@ -96,12 +98,9 @@ export const EventDetailsPage: React.FC = () => {
 
     setCoverUploading(true);
     try {
-      // обновляем обложку на бэке
       const updatedShort: EventShortEntry =
         await eventsService.editEventAvatar(id, file);
 
-      // в EventShortEntry должен прийти новый mediaUri
-      // обновляем текущий event, чтобы сразу отрисовать новую обложку
       setEvent(prev =>
         prev
           ? {
@@ -111,7 +110,6 @@ export const EventDetailsPage: React.FC = () => {
           : prev,
       );
 
-      // ломаем кеш (если URL на бэке не меняется)
       setCoverVersion(v => v + 1);
 
       setSnackbar({
@@ -132,6 +130,76 @@ export const EventDetailsPage: React.FC = () => {
     }
   };
 
+  const handleCheckout = async () => {
+    if (!id) return;
+    try {
+      setIsCheckoutLoading(true);
+      await eventsService.checkoutEvent(id);
+      setSnackbar({
+        open: true,
+        message: 'Расчёт по ивенту выполнен',
+        severity: 'success',
+      });
+    } catch (e) {
+      console.error(e);
+      setSnackbar({
+        open: true,
+        message: 'Ошибка при расчёте ивента',
+        severity: 'error',
+      });
+    } finally {
+      setIsCheckoutLoading(false);
+    }
+  };
+
+  const handleComplete = async () => {
+    if (!id) return;
+    try {
+      setIsCompleteLoading(true);
+      await eventsService.completeEvent(id);
+      await loadEvent(); // обновим статус isCompleted
+
+      setSnackbar({
+        open: true,
+        message: 'Ивент успешно завершён',
+        severity: 'success',
+      });
+    } catch (e) {
+      console.error(e);
+      setSnackbar({
+        open: true,
+        message: 'Ошибка при завершении ивента',
+        severity: 'error',
+      });
+    } finally {
+      setIsCompleteLoading(false);
+    }
+  };
+
+  const handleReopen = async () => {
+    if (!id) return;
+    try {
+      setIsReopenLoading(true);
+      await eventsService.reopenEvent(id);
+      await loadEvent(); // обновим статус isCompleted
+
+      setSnackbar({
+        open: true,
+        message: 'Ивент переоткрыт',
+        severity: 'success',
+      });
+    } catch (e) {
+      console.error(e);
+      setSnackbar({
+        open: true,
+        message: 'Ошибка при переоткрытии ивента',
+        severity: 'error',
+      });
+    } finally {
+      setIsReopenLoading(false);
+    }
+  };
+
   const handleCloseSnackbar = () =>
     setSnackbar(prev => ({ ...prev, open: false }));
 
@@ -145,7 +213,6 @@ export const EventDetailsPage: React.FC = () => {
     );
   }
 
-  // соберём src для обложки c cache-buster
   const coverSrc =
     event?.mediaUri ? `${event.mediaUri}?v=${coverVersion}` : undefined;
 
@@ -422,14 +489,55 @@ export const EventDetailsPage: React.FC = () => {
               </Button>
             </Stack>
 
+            {/* Кнопки действий */}
             <Box textAlign="right">
-              <Button
-                variant="contained"
-                color="error"
-                onClick={handleFinishEvent}
-              >
-                Завершить ивент
-              </Button>
+              <Stack direction="row" spacing={1} justifyContent="flex-end">
+                {!event.isCompleted ? (
+                  <>
+                    <Button
+                      variant="contained"
+                      color="info"
+                      onClick={handleCheckout}
+                      disabled={isCheckoutLoading}
+                      startIcon={
+                        isCheckoutLoading ? (
+                          <CircularProgress size={18} />
+                        ) : undefined
+                      }
+                    >
+                      {isCheckoutLoading ? 'Расчёт...' : 'Рассчитать'}
+                    </Button>
+
+                    <Button
+                      variant="contained"
+                      color="error"
+                      onClick={handleComplete}
+                      disabled={isCompleteLoading}
+                      startIcon={
+                        isCompleteLoading ? (
+                          <CircularProgress size={18} />
+                        ) : undefined
+                      }
+                    >
+                      {isCompleteLoading ? 'Завершение...' : 'Завершить ивент'}
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleReopen}
+                    disabled={isReopenLoading}
+                    startIcon={
+                      isReopenLoading ? (
+                        <CircularProgress size={18} />
+                      ) : undefined
+                    }
+                  >
+                    {isReopenLoading ? 'Открытие...' : 'Переоткрыть'}
+                  </Button>
+                )}
+              </Stack>
             </Box>
           </>
         )}

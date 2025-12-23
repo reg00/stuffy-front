@@ -6,6 +6,9 @@ import {
   patchApiV1EventsByEventId,
   patchApiV1EventsByEventIdPhoto,
   postApiV1Events,
+  postApiV1EventsByEventIdCheckout,
+  postApiV1EventsByEventIdComplete,
+  postApiV1EventsByEventIdReopen,
 } from '../api/sdk.gen';
 import { apiClient } from './api-client';
 import type { EventShortEntryResponse, EventShortEntry, GetEventEntry, AddEventEntry, UpdateEventEntry } from '../api';
@@ -75,6 +78,36 @@ class EventsService {
 
   async deleteEvent(eventId: string) {
     const response = await deleteApiV1EventsByEventId({
+      path: { eventId },
+      client: apiClient.getClient(),
+    });
+
+    if(response.error)
+      throw response.error
+  }
+
+  async checkoutEvent(eventId: string) {
+    const response = await postApiV1EventsByEventIdCheckout({
+      path: { eventId },
+      client: apiClient.getClient(),
+    });
+
+    if(response.error)
+      throw response.error
+  }
+
+  async completeEvent(eventId: string) {
+    const response = await postApiV1EventsByEventIdComplete({
+      path: { eventId },
+      client: apiClient.getClient(),
+    });
+
+    if(response.error)
+      throw response.error
+  }
+
+  async reopenEvent(eventId: string) {
+    const response = await postApiV1EventsByEventIdReopen({
       path: { eventId },
       client: apiClient.getClient(),
     });
