@@ -1,5 +1,5 @@
 // src/components/User/UserSettingsPage.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, forwardRef } from 'react';
 import { useAuthStore } from '../../store/auth-store';
 import { authService } from '../../services/auth-service';
 import type { UpdateModel } from '../../api';
@@ -21,15 +21,34 @@ import {
 import { useTheme } from '@mui/material/styles';
 import SaveIcon from '@mui/icons-material/Save';
 
+import type { InputBaseComponentProps } from '@mui/material/InputBase';
+import { InputMask, type InputMaskProps } from '@react-input/mask'; // интеграция с MUI через inputComponent + forwardRef [web:2]
+
 interface UserFormData {
   username: string; // не редактируем, но храним
-  email: string;    // не редактируем, но храним
+  email: string; // не редактируем, но храним
   firstName: string;
   middleName: string;
   lastName: string;
   phone: string;
   avatarFile?: File | null;
 }
+
+type PhoneMaskProps = InputMaskProps & InputBaseComponentProps;
+
+// MUI ожидает компонент, который умеет держать ref, поэтому forwardRef. [web:2]
+const PhoneMaskInput = forwardRef<HTMLInputElement, PhoneMaskProps>((props, ref) => {
+  return (
+    <InputMask
+      {...props}
+      ref={ref}
+      mask="+7 (___) ___-__-__"
+      replacement={{ _: /\d/ }}
+      showMask
+    />
+  );
+});
+PhoneMaskInput.displayName = 'PhoneMaskInput';
 
 export const UserSettingsPage: React.FC = () => {
   const { user, refreshUser, isLoading, error } = useAuthStore();
@@ -103,8 +122,8 @@ export const UserSettingsPage: React.FC = () => {
       await refreshUser();
 
       setFormData(prev => ({ ...prev, avatarFile: null }));
-      setAvatarPreview(null);         // переходим обратно на src из imageUri
-      setAvatarVersion(v => v + 1);   // ломаем кеш браузера
+      setAvatarPreview(null); // переходим обратно на src из imageUri
+      setAvatarVersion(v => v + 1); // ломаем кеш браузера
 
       setSnackbar({
         open: true,
@@ -154,8 +173,7 @@ export const UserSettingsPage: React.FC = () => {
     }
   };
 
-  const handleCloseSnackbar = () =>
-    setSnackbar(prev => ({ ...prev, open: false }));
+  const handleCloseSnackbar = () => setSnackbar(prev => ({ ...prev, open: false }));
 
   if (!user) {
     return (
@@ -169,16 +187,11 @@ export const UserSettingsPage: React.FC = () => {
   // 1) если есть локальный blob (avatarPreview) — показываем его
   // 2) иначе, если есть imageUri — добавляем ?v=avatarVersion для обхода кеша
   const avatarSrc =
-    avatarPreview ??
-    (user.imageUri ? `${user.imageUri}?v=${avatarVersion}` : undefined);
+    avatarPreview ?? (user.imageUri ? `${user.imageUri}?v=${avatarVersion}` : undefined);
 
   return (
     <Container maxWidth="md">
-      <Typography
-        variant="h4"
-        component="h1"
-        sx={{ mb: 4, fontWeight: 700 }}
-      >
+      <Typography variant="h4" component="h1" sx={{ mb: 4, fontWeight: 700 }}>
         Настройки профиля
       </Typography>
 
@@ -203,18 +216,8 @@ export const UserSettingsPage: React.FC = () => {
         </Alert>
       </Snackbar>
 
-      <Paper
-        elevation={4}
-        sx={{
-          p: 4,
-          borderRadius: 2,
-        }}
-      >
-        <Stack
-          direction={isMdUp ? 'row' : 'column'}
-          spacing={4}
-          alignItems="flex-start"
-        >
+      <Paper elevation={4} sx={{ p: 4, borderRadius: 2 }}>
+        <Stack direction={isMdUp ? 'row' : 'column'} spacing={4} alignItems="flex-start">
           {/* Левая колонка – аватар */}
           <Box
             sx={{
@@ -239,15 +242,13 @@ export const UserSettingsPage: React.FC = () => {
               onClick={handleAvatarClick}
             >
               {!avatarSrc &&
-                (user.firstName?.[0] ||
-                  user.name?.[0] ||
-                  user.email?.[0] ||
-                  'U'
-                ).toUpperCase()}
+                (user.firstName?.[0] || user.name?.[0] || user.email?.[0] || 'U').toUpperCase()}
             </Avatar>
+
             <Typography variant="body2" color="text.secondary">
               Нажмите на аватар, чтобы выбрать фото
             </Typography>
+
             <input
               ref={fileInputRef}
               hidden
@@ -255,16 +256,11 @@ export const UserSettingsPage: React.FC = () => {
               type="file"
               onChange={handleAvatarChange}
             />
+
             {formData.avatarFile && (
               <Button
                 variant="contained"
-                startIcon={
-                  avatarUploading ? (
-                    <CircularProgress size={18} />
-                  ) : (
-                    <SaveIcon />
-                  )
-                }
+                startIcon={avatarUploading ? <CircularProgress size={18} /> : <SaveIcon />}
                 onClick={handleAvatarUpload}
                 disabled={avatarUploading}
               >
@@ -285,15 +281,7 @@ export const UserSettingsPage: React.FC = () => {
                 size="small"
                 disabled={isLoading}
               />
-              <TextField
-                label="Отчество"
-                name="middleName"
-                value={formData.middleName}
-                onChange={handleInputChange}
-                fullWidth
-                size="small"
-                disabled={isLoading}
-              />
+
               <TextField
                 label="Фамилия"
                 name="lastName"
@@ -303,6 +291,17 @@ export const UserSettingsPage: React.FC = () => {
                 size="small"
                 disabled={isLoading}
               />
+
+              <TextField
+                label="Отчество"
+                name="middleName"
+                value={formData.middleName}
+                onChange={handleInputChange}
+                fullWidth
+                size="small"
+                disabled={isLoading}
+              />
+
               <TextField
                 label="Телефон"
                 name="phone"
@@ -311,6 +310,10 @@ export const UserSettingsPage: React.FC = () => {
                 fullWidth
                 size="small"
                 disabled={isLoading}
+                type="tel"
+                InputProps={{
+                  inputComponent: PhoneMaskInput, // без any [web:2]
+                }}
               />
 
               <Box>
@@ -318,13 +321,7 @@ export const UserSettingsPage: React.FC = () => {
                   variant="contained"
                   onClick={handleSaveProfile}
                   disabled={isLoading}
-                  startIcon={
-                    isLoading ? (
-                      <CircularProgress size={18} />
-                    ) : (
-                      <SaveIcon />
-                    )
-                  }
+                  startIcon={isLoading ? <CircularProgress size={18} /> : <SaveIcon />}
                 >
                   {isLoading ? 'Сохранение...' : 'Сохранить изменения'}
                 </Button>
