@@ -1,4 +1,3 @@
-// src/components/Events/EventDetailsPage.tsx
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
 import { eventsService } from '../../services/event-service';
@@ -22,13 +21,13 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import CircularProgress from '@mui/material/CircularProgress';
 import Snackbar from '@mui/material/Snackbar';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 
 type RouteParams = {
   id: string;
 };
 
-const FALLBACK_IMAGE =
-  'https://via.placeholder.com/120x120.png?text=+';
+const FALLBACK_IMAGE = 'https://via.placeholder.com/120x120.png?text=+';
 
 export const EventDetailsPage: React.FC = () => {
   const { id } = useParams<RouteParams>();
@@ -56,6 +55,7 @@ export const EventDetailsPage: React.FC = () => {
     message: '',
     severity: 'success',
   });
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadEvent = async () => {
@@ -89,17 +89,17 @@ export const EventDetailsPage: React.FC = () => {
     fileInputRef.current?.click();
   };
 
-  const handleCoverChange = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleCoverChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!id) return;
     const file = e.target.files?.[0];
     if (!file) return;
 
     setCoverUploading(true);
     try {
-      const updatedShort: EventShortEntry =
-        await eventsService.editEventAvatar(id, file);
+      const updatedShort: EventShortEntry = await eventsService.editEventAvatar(
+        id,
+        file,
+      );
 
       setEvent(prev =>
         prev
@@ -213,8 +213,7 @@ export const EventDetailsPage: React.FC = () => {
     );
   }
 
-  const coverSrc =
-    event?.mediaUri ? `${event.mediaUri}?v=${coverVersion}` : undefined;
+  const coverSrc = event?.mediaUri ? `${event.mediaUri}?v=${coverVersion}` : undefined;
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -372,14 +371,9 @@ export const EventDetailsPage: React.FC = () => {
                       sx={{ mb: 1 }}
                     >
                       <Typography variant="body2" color="text.secondary">
-                        {new Date(
-                          event.eventDateStart,
-                        ).toLocaleDateString()}
+                        {new Date(event.eventDateStart).toLocaleDateString()}
                       </Typography>
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                      >
+                      <Typography variant="body2" color="text.secondary">
                         •
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
@@ -397,10 +391,7 @@ export const EventDetailsPage: React.FC = () => {
                     </Stack>
 
                     {event.description && (
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                      >
+                      <Typography variant="body2" color="text.secondary">
                         {event.description}
                       </Typography>
                     )}
@@ -442,9 +433,7 @@ export const EventDetailsPage: React.FC = () => {
                   >
                     <GroupIcon fontSize="small" />
                   </Box>
-                  <Typography color="text.primary">
-                    Участники
-                  </Typography>
+                  <Typography color="text.primary">Участники</Typography>
                 </Stack>
                 <ArrowForwardIosIcon fontSize="small" />
               </Button>
@@ -481,9 +470,41 @@ export const EventDetailsPage: React.FC = () => {
                   >
                     <ShoppingCartIcon fontSize="small" />
                   </Box>
-                  <Typography color="text.primary">
-                    Покупки
-                  </Typography>
+                  <Typography color="text.primary">Покупки</Typography>
+                </Stack>
+                <ArrowForwardIosIcon fontSize="small" />
+              </Button>
+
+              {/* НОВАЯ КНОПКА "Долги" */}
+              <Button
+                variant="outlined"
+                fullWidth
+                onClick={() => navigate(`/events/${id}/debts`)}
+                sx={{
+                  justifyContent: 'space-between',
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  py: 1.5,
+                  bgcolor: 'background.default',
+                  borderColor: 'divider',
+                }}
+              >
+                <Stack direction="row" spacing={1.5} alignItems="center">
+                  <Box
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 1,
+                      bgcolor: 'warning.main',
+                      color: 'warning.contrastText',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <ReceiptLongIcon fontSize="small" />
+                  </Box>
+                  <Typography color="text.primary">Долги</Typography>
                 </Stack>
                 <ArrowForwardIosIcon fontSize="small" />
               </Button>

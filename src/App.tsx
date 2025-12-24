@@ -12,6 +12,7 @@ import { useAuthStore } from './store/auth-store';
 import { ConfirmEmail } from './components/Auth/ConfirmEmail';
 import { EmailConfirmed } from './components/Auth/EmailConfirmed';
 import { UserSettingsPage } from './components/User/UserSettingsPage';
+import { DebtsPage } from './components/Debts/DebtsPage';
 
 function App() {
   const { isAuthenticated } = useAuthStore();
@@ -67,6 +68,15 @@ function App() {
           element={
             <ProtectedRoute>
                 <PurchasesPage />
+            </ProtectedRoute>
+          }
+        />
+
+         <Route
+          path="/events/:id/debts"
+          element={
+            <ProtectedRoute>
+                <DebtsPage />
             </ProtectedRoute>
           }
         />

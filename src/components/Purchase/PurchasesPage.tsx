@@ -219,7 +219,7 @@ export const PurchasesPage: React.FC = () => {
                   sx={{ flexShrink: 0 }}
                 >
                   <Chip
-                    label={p.isComplete ? 'Оплачено' : 'Не оплачено'}
+                    label={p.isComplete ? 'Рассчитано' : 'Не рассчитано'}
                     size="small"
                     color={p.isComplete ? 'success' : 'warning'}
                   />
